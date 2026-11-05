@@ -1,6 +1,6 @@
 # Job Application Tracker
 
-A web app for managing a job search from one dashboard: applications, a Kanban pipeline, interviews, documents and analytics.
+The Job Application Tracker is a web app that helps users organize their job search in one place. Users can track applications and statuses, schedule interviews, store employment documents, and review analytics. Its intuitive dashboard highlights submitted applications, upcoming interviews, and outcomes to help users stay organized.
 
 **Stack:** Next.js 16 · React 19 · Auth.js v5 · Redux Toolkit · Tailwind CSS 4 · Express 5 · PostgreSQL · Prisma 7 · Cloudinary · dnd-kit · Recharts · Playwright/Vitest
 
