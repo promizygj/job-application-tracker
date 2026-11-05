@@ -1,0 +1,46 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { api, getErrorMessage } from "@/lib/api";
+
+export function ForgotPasswordForm() {
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await api.post("/auth/forgot-password", { email: new FormData(e.currentTarget).get("email") });
+      setSent(true);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <div className="space-y-4">
+        <Alert type="success">If an account exists for that email, a reset link is on its way. It expires in 1 hour.</Alert>
+        <Link href="/login" className="block text-center text-sm font-medium text-indigo-600 hover:underline">Back to log in</Link>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      {error && <Alert type="error">{error}</Alert>}
+      <Input label="Email" name="email" type="email" autoComplete="email" required />
+      <Button type="submit" loading={loading} className="w-full">Send reset link</Button>
+      <Link href="/login" className="block text-center text-sm text-indigo-600 hover:underline">Back to log in</Link>
+    </form>
+  );
+}

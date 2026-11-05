@@ -1,0 +1,231 @@
+// Prisma schema for the Job Application Tracker.
+// The database URL lives in prisma.config.js (Prisma 7).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+enum ApplicationStatus {
+  SAVED
+  APPLIED
+  ASSESSMENT
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum EmploymentType {
+  REMOTE
+  HYBRID
+  ONSITE
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  TEMPORARY
+}
+
+enum SalaryPeriod {
+  HOURLY
+  MONTHLY
+  YEARLY
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InterviewType {
+  PHONE
+  VIDEO
+  ONSITE
+  TECHNICAL
+  BEHAVIOURAL
+  PANEL
+  OTHER
+}
+
+enum InterviewOutcome {
+  PENDING
+  PASSED
+  FAILED
+  CANCELLED
+}
+
+enum DocumentType {
+  CV
+  COVER_LETTER
+  OTHER
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
+// ───────────────────────── Auth ─────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique // stored lower-cased
+  passwordHash    String
+  name            String
+  headline        String?
+  location        String?
+  timezone        String    @default("UTC")
+  avatarUrl       String?
+  emailVerifiedAt DateTime?
+  sessionVersion  Int       @default(0) // bump to invalidate every Auth.js session (logout-all, password reset)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  authTokens    AuthToken[]
+  applications  Application[]
+  interviews    Interview[]
+  documents     Document[]
+  statusChanges StatusChange[]
+}
+
+/// Single-use tokens for email verification, password reset and email change.
+model AuthToken {
+  id        String    @id @default(cuid())
+  userId    String
+  type      TokenType
+  tokenHash String    @unique
+  newEmail  String? // only for EMAIL_CHANGE
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+// ───────────────────────── Core ─────────────────────────
+
+model Application {
+  id             String            @id @default(cuid())
+  userId         String
+  company        String
+  jobTitle       String
+  jobDescription String?           @db.Text
+  jobUrl         String?
+  location       String?
+  employmentType EmploymentType
+  jobType        JobType?
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String?           @db.Char(3) // ISO 4217, e.g. "USD"
+  salaryPeriod   SalaryPeriod?
+  status         ApplicationStatus @default(SAVED)
+  position       Float             @default(0) // order within Kanban column
+  priority       Priority          @default(MEDIUM)
+  source         String? // LinkedIn, Referral, Company site…
+  appliedAt      DateTime?         @db.Date
+  followUpAt     DateTime? // reserved for follow-up reminders
+  notes          String?           @db.Text
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviews    Interview[]
+  statusChanges StatusChange[]
+  documents     ApplicationDocument[]
+
+  @@index([userId, status, position])
+  @@index([userId, appliedAt])
+  @@index([userId, createdAt])
+  @@index([userId, company])
+}
+
+/// Audit trail of status moves — powers the timeline and conversion analytics.
+model StatusChange {
+  id            String             @id @default(cuid())
+  applicationId String
+  userId        String
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  changedAt     DateTime           @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, changedAt])
+  @@index([userId, toStatus])
+}
+
+model Interview {
+  id               String           @id @default(cuid())
+  applicationId    String
+  userId           String // denormalised for fast "my upcoming interviews" queries
+  title            String // "Technical round 1"
+  type             InterviewType
+  startsAt         DateTime
+  durationMinutes  Int              @default(60)
+  timezone         String           @default("UTC")
+  location         String?
+  meetingUrl       String?
+  interviewerName  String?
+  interviewerRole  String?
+  interviewerEmail String?
+  prepNotes        String?          @db.Text
+  feedbackNotes    String?          @db.Text
+  outcome          InterviewOutcome @default(PENDING)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startsAt])
+  @@index([applicationId])
+}
+
+/// A stored file. Versions of the same CV share `name` and increment `version`.
+model Document {
+  id         String       @id @default(cuid())
+  userId     String
+  type       DocumentType
+  name       String // logical name, e.g. "Frontend CV"
+  version    Int          @default(1)
+  isDefault  Boolean      @default(false)
+  fileName   String // original upload filename
+  mimeType   String
+  sizeBytes  Int
+  storageKey String // Cloudinary public_id / S3 key — never a public URL
+  notes      String?
+  createdAt  DateTime     @default(now())
+
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications ApplicationDocument[]
+
+  @@unique([userId, type, name, version])
+  @@index([userId, type])
+}
+
+/// Many-to-many: which documents were sent with which application.
+model ApplicationDocument {
+  applicationId String
+  documentId    String
+  attachedAt    DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([applicationId, documentId])
+  @@index([documentId])
+}
