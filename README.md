@@ -4,13 +4,15 @@ The Job Application Tracker is a web app that helps users organize their job sea
 
 **Stack:** Next.js 16 · React 19 · Auth.js v5 · Redux Toolkit · Tailwind CSS 4 · Express 5 · PostgreSQL · Prisma 7 · Cloudinary · dnd-kit · Recharts · Playwright/Vitest
 
+**Hosting:** Vercel (frontend) · Render (API) · Neon (PostgreSQL) · Cloudinary (files) · Brevo (email). See [docs/05-deployment.md](docs/05-deployment.md).
+
 ## Status
 
 - [x] **Phase 1 — Planning & design** (see [`docs/`](./docs))
 - [x] **Phase 2 — Backend (Express + Prisma)**: auth, profile, applications (CRUD, status history, search/filter/sort/pagination), Kanban board, interviews, documents (local disk storage for now) and dashboard analytics
   - Remaining: avatar upload. API tests: 143 passing.
 - [x] **Phase 3 — Frontend (Next.js)**: Redux Toolkit + RTK Query; dashboard (stat tiles, weekly activity chart with table view, pipeline and status bars); applications list/form/details; Kanban board (drag & drop, keyboard, optimistic updates); interviews (schedule/edit, upcoming/past/calendar, outcomes, time zones); documents (upload, versions, preview/download, attach); settings (profile, email change, password, sessions, delete account)
-- [ ] Phase 4 — Testing & deployment — **in progress:** API tests (143) and Playwright end-to-end tests (41) done; deployment next
+- [ ] Phase 4 — Testing & deployment — **in progress:** API tests (147) and Playwright end-to-end tests (41) done; deployment configured (render.yaml, Cloudinary storage), going live next
 
 ## Design Docs
 
@@ -21,6 +23,7 @@ The Job Application Tracker is a web app that helps users organize their job sea
 | [`schema.prisma`](server/prisma/schema.prisma) | Prisma schema |
 | [03 API endpoints](docs/03-api-endpoints.md) | REST endpoints, request/response shapes, error format |
 | [04 Wireframes](docs/04-wireframes.md) | Wireframes for every screen, design tokens, component list |
+| [05 Deployment](docs/05-deployment.md) | Vercel + Render + Neon + Cloudinary + Brevo, step by step |
 
 ## Repository Layout
 
@@ -65,11 +68,13 @@ Without SMTP settings, verification and password-reset emails are **printed in t
 | `npm run db:migrate` | Create/apply migrations (dev) |
 | `npm run db:deploy` | Apply migrations (production) |
 | `npm run db:studio` | Browse the database in Prisma Studio |
+| `npm run start:prod` | Production start: apply migrations, then run the API |
+| `npm run storage:check` | Upload/download/delete a test file with the configured storage driver |
 | `npm test` | API tests (Vitest + Supertest). Uses a separate `job_tracker_test` database, created automatically; your dev data is never touched. |
 
 ## Testing
 
-**API tests** (Vitest + Supertest, 143 tests). They use a separate `job_tracker_test` database, created automatically; your dev data is never touched.
+**API tests** (Vitest + Supertest, 147 tests). They use a separate `job_tracker_test` database, created automatically; your dev data is never touched.
 
 ```bash
 cd server && npm test

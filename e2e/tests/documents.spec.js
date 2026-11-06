@@ -34,7 +34,7 @@ test.describe("verified", () => {
     await choose(page, "virus.exe", Buffer.from("MZ..."), "application/octet-stream");
     await expect(dialog(page).getByText("Only PDF, DOC and DOCX files can be uploaded.")).toBeVisible();
     await choose(page, "huge.pdf", Buffer.concat([PDF, Buffer.alloc(5 * 1024 * 1024)]));
-    await expect(dialog(page).getByText(/The limit is 5 MB/)).toBeVisible();
+    await expect(dialog(page).getByText(/The limit is 4 MB/)).toBeVisible();
     // Passes the browser's checks, but the server reads the bytes: not a PDF.
     await choose(page, "fake.pdf", Buffer.from("not really a pdf"));
     await dialog(page).getByLabel("Name *").fill("Fake");

@@ -16,8 +16,7 @@ import { usersRouter } from "./modules/users/users.routes.js";
 
 export const app = express();
 
-// Behind the Next.js rewrite proxy (dev) and Render/Railway's proxy (prod).
-app.set("trust proxy", 1);
+app.set("trust proxy", env.TRUST_PROXY);
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(express.json({ limit: "100kb" }));
@@ -30,6 +29,12 @@ if (env.NODE_ENV === "development") {
 }
 
 const api = express.Router();
+// Authenticated, per-user data: never let a browser or a CDN (Vercel caches proxied responses that
+// allow it) store API responses. The file route sets its own "private" header.
+api.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 api.get("/health", async (req, res) => {
   let db = "ok";
   try {

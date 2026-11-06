@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
-import { storage } from "../../lib/storage.js";
+import { storage } from "../../lib/storage/index.js";
 
 /**
  * Deletes the account and everything in it. Database rows go via cascades; stored files are

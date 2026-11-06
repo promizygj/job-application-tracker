@@ -44,7 +44,7 @@ function Dropzone({ file, onFile, error }) {
         ) : (
           <>
             <span className="font-medium">Drop a file here, or click to choose</span>
-            <span className="text-slate-500">PDF, DOC or DOCX · up to 5 MB</span>
+            <span className="text-slate-500">PDF, DOC or DOCX · up to 4 MB</span>
           </>
         )}
         <input

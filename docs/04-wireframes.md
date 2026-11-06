@@ -198,7 +198,7 @@ Documents                         [All] [CVs] [Cover letters]    [Upload]
 │ 📝 Stripe cover letter             Cover letter · v1 · used in 1      │
 └──────────────────────────────────────────────────────────────────────┘
 ```
-**Upload modal:** drag-and-drop zone (PDF/DOC/DOCX, ≤ 5 MB) · Type · Name (combobox: pick existing name → new version, or type a new one) · Notes. Progress bar during upload.
+**Upload modal:** drag-and-drop zone (PDF/DOC/DOCX, ≤ 4 MB) · Type · Name (combobox: pick existing name → new version, or type a new one) · Notes. Progress bar during upload.
 Preview: PDFs open in a modal viewer; DOC/DOCX download.
 
 ## 10. Settings

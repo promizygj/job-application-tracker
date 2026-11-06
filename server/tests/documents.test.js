@@ -89,8 +89,8 @@ describe("POST /documents (upload)", () => {
     expect(await prisma.document.count()).toBe(0);
   });
 
-  it("rejects files over 5 MB", async () => {
-    const big = Buffer.concat([PDF, Buffer.alloc(5 * 1024 * 1024)]);
+  it("rejects files over 4 MB", async () => {
+    const big = Buffer.concat([PDF, Buffer.alloc(4 * 1024 * 1024)]);
     const res = await upload({ file: big });
     expect(res.status).toBe(413);
     expect(res.body.error.code).toBe("FILE_TOO_LARGE");

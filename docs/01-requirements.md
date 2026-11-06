@@ -75,7 +75,7 @@ IDs are referenced by tests in Phase 4.
 - **INT-4** Scheduling an interview on an application in `SAVED`/`APPLIED`/`ASSESSMENT` offers to move it to `INTERVIEW`.
 
 ### G. Documents (DOC)
-- **DOC-1** Upload PDF, DOC, DOCX (max 5 MB). Type: CV, Cover letter, Other.
+- **DOC-1** Upload PDF, DOC, DOCX (max 4 MB, because uploads pass through Vercel's proxy, which caps bodies at about 4.5 MB). Type: CV, Cover letter, Other.
 - **DOC-2** CV versions: documents share a `name` (e.g. "Frontend CV"); uploading a new version increments `version`. One version per name can be marked default.
 - **DOC-3** Attach one or more documents to an application (many-to-many); show "used in N applications".
 - **DOC-4** Preview (PDF inline) and download via short-lived signed URL.

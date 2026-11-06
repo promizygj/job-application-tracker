@@ -1,7 +1,8 @@
 import path from "node:path";
 import { prisma } from "../../lib/prisma.js";
 import { detectDocumentType } from "../../lib/fileType.js";
-import { storage } from "../../lib/storage.js";
+import { signFileLink } from "../../lib/fileLinks.js";
+import { storage } from "../../lib/storage/index.js";
 import { AppError, notFound } from "../../utils/AppError.js";
 
 // storageKey never leaves the server.
@@ -144,7 +145,7 @@ export async function remove(userId, id, { force = false } = {}) {
 
 export async function downloadUrl(userId, id, { inline = false } = {}) {
   const doc = await findOwned(userId, id);
-  return storage.signedUrl(doc.storageKey, { fileName: doc.fileName, inline });
+  return signFileLink(doc.storageKey, { fileName: doc.fileName, inline });
 }
 
 // ── Attach / detach (DOC-3) ──
