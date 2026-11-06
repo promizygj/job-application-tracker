@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ApplicationsView } from "@/components/applications/ApplicationsView";
 import { ApplicationForm, toFormValues } from "@/components/applications/ApplicationForm";
 import { STATUS } from "@/lib/constants";
 import { getApiError, useCreateApplicationMutation } from "@/store/apiSlice";
@@ -26,14 +26,22 @@ export function NewApplication() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <Link href="/applications" className="text-sm text-slate-600 hover:underline">← Applications</Link>
-        <h1 className="mt-2 text-2xl font-semibold">New application</h1>
+    <>
+      {/* Figma: the form is a dialog over the Applications list. The list behind is inert. */}
+      <div inert aria-hidden>
+        <ApplicationsView />
       </div>
       {/* Next keeps visited pages alive (Activity). A new bfcacheId on each forward navigation gives a
           fresh form, while browser Back still restores an unfinished draft. */}
-      <ApplicationForm key={router.bfcacheId} initialValues={initialValues} submitLabel="Save application" onSubmit={submit} />
-    </div>
+      <ApplicationForm
+        key={router.bfcacheId}
+        asDialog
+        initialValues={initialValues}
+        title="New application"
+        subtitle="Track a job you've applied to — or one you want to apply for."
+        submitLabel="Save application"
+        onSubmit={submit}
+      />
+    </>
   );
 }

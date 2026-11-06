@@ -6,8 +6,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("add an application: validation, save, details page", async ({ page }) => {
-  await expect(page.getByText("No applications yet")).toBeVisible();
-  await page.getByRole("link", { name: "Add your first application" }).click();
+  await expect(page.getByRole("heading", { name: /Welcome to JobTrack/ })).toBeVisible();
+  await page.getByRole("link", { name: "Add application", exact: true }).click();
   await expect(page).toHaveURL(/\/applications\/new$/);
 
   await page.getByRole("button", { name: "Save application" }).click();
@@ -24,7 +24,7 @@ test("add an application: validation, save, details page", async ({ page }) => {
   await expect(page.getByText("Must be at least the minimum")).toBeVisible();
 
   await visible(page.getByLabel("Maximum")).fill("90,000");
-  await visible(page.getByLabel("Status", { exact: true })).selectOption("APPLIED");
+  await visible(page.getByText("Applied", { exact: true })).click();
   await visible(page.getByLabel("Job description")).fill("Build payment UIs.");
   await page.getByRole("button", { name: "Save application" }).click();
 
@@ -41,10 +41,11 @@ test("change status, see the timeline, edit, then delete", async ({ page }) => {
   await page.goto(`/applications/${app.id}`);
 
   await page.getByRole("combobox", { name: "Status" }).selectOption("INTERVIEW");
-  await expect(page.getByText("Moved to Interview")).toBeVisible();
-  await page.getByRole("tab", { name: "Timeline" }).click();
+  await expect(page.locator("[aria-live=polite]").getByText("Moved to Interview")).toBeVisible();
+  await page.getByRole("tab", { name: "Activity" }).click();
   await expect(page.getByRole("tabpanel").getByRole("listitem")).toHaveCount(2);
 
+  await page.getByRole("tab", { name: "Overview" }).click();
   await page.getByRole("link", { name: "Edit" }).click();
   await expect(visible(page.getByLabel("Company *"))).toHaveValue("Monzo");
   await visible(page.getByLabel("Notes")).fill("Recruiter: Sam");
@@ -55,7 +56,7 @@ test("change status, see the timeline, edit, then delete", async ({ page }) => {
   await page.getByRole("button", { name: "Delete" }).click();
   await dialog(page).getByRole("button", { name: "Delete" }).click();
   await expect(page).toHaveURL(/\/applications$/);
-  await expect(page.getByRole("heading", { name: "Applications (0)" })).toBeVisible();
+  await expect(page.getByText("No applications yet")).toBeVisible();
 });
 
 test("the new-application form starts empty after a previous save", async ({ page }) => {
@@ -66,8 +67,8 @@ test("the new-application form starts empty after a previous save", async ({ pag
   await page.getByRole("button", { name: "Save application" }).click();
   await expect(page).toHaveURL(/\/applications\/[a-z0-9]+$/);
 
-  await page.getByRole("link", { name: "← Applications" }).click();
-  await page.getByRole("link", { name: "+ New application" }).click();
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Applications" }).click();
+  await page.getByRole("link", { name: "New application" }).click();
   await expect(visible(page.getByLabel("Company *"))).toHaveValue("");
   await expect(page.getByRole("button", { name: "Save application" })).toBeEnabled();
 });
@@ -77,27 +78,28 @@ test("search, filter and sort are kept in the URL", async ({ page }) => {
   await createApplication(page, { company: "Monzo", status: "APPLIED", appliedAt: "2026-10-01" });
   await createApplication(page, { company: "Vercel" });
   await page.goto("/applications");
-  await expect(page.getByRole("heading", { name: "Applications (3)" })).toBeVisible();
+  await expect(visible(page.getByText(/^3 applications? · |^3 applications?$/))).toBeVisible();
 
   await page.getByLabel("Search company or job title").fill("mon");
   await expect(page).toHaveURL(/\?q=mon$/);
-  await expect(page.getByRole("heading", { name: "Applications (1)" })).toBeVisible();
-  await page.getByRole("button", { name: "✕ Clear filters" }).click();
-  await expect(page.getByRole("heading", { name: "Applications (3)" })).toBeVisible();
+  await expect(visible(page.getByText(/^1 applications? · |^1 applications?$/))).toBeVisible();
+  await page.getByRole("button", { name: "Clear filters" }).click();
+  await expect(visible(page.getByText(/^3 applications? · |^3 applications?$/))).toBeVisible();
 
+  await page.getByRole("button", { name: "Filters" }).click();
   await page.getByRole("button", { name: /^Type/ }).click();
   await visible(page.getByLabel("Remote")).click();
-  await expect(page.getByRole("heading", { name: "Applications (2)" })).toBeVisible();
+  await expect(visible(page.getByText(/^2 applications? · |^2 applications?$/))).toBeVisible();
   await expect(visible(page.getByLabel("Remote"))).toBeChecked();
   await page.keyboard.press("Escape");
 
   await page.getByLabel("Sort").selectOption("company");
   await expect(page).toHaveURL(/employmentType=REMOTE.*sort=company|sort=company.*employmentType=REMOTE/);
-  await expect(page.locator("tbody tr td:first-child")).toHaveText(["Monzo", "Vercel"]);
+  await expect(page.locator("tbody tr td:first-child a")).toHaveText(["Monzo", "Vercel"]);
 
   // The URL alone reproduces the view.
   await page.reload();
-  await expect(page.locator("tbody tr td:first-child")).toHaveText(["Monzo", "Vercel"]);
+  await expect(page.locator("tbody tr td:first-child a")).toHaveText(["Monzo", "Vercel"]);
 });
 
 test("dashboard reflects new applications", async ({ page }) => {

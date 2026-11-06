@@ -32,9 +32,9 @@ function Agenda({ items, viewerTz, now, onEdit }) {
         <section key={g.key} aria-labelledby={`day-${g.key}`}>
           <h2 id={`day-${g.key}`} className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">
             {formatDayKey(g.key, { year: "numeric" })}
-            {g.key === today && <span className="ml-2 rounded bg-indigo-600 px-1.5 py-0.5 text-white normal-case">Today</span>}
+            {g.key === today && <span className="ml-2 rounded bg-brand-600 px-1.5 py-0.5 text-white normal-case">Today</span>}
           </h2>
-          <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+          <ul className="divide-y divide-line-subtle card">
             {g.items.map((i) => (
               <InterviewItem key={i.id} interview={i} application={i.application} viewerTz={viewerTz} now={now} onEdit={onEdit} />
             ))}
@@ -53,7 +53,7 @@ function ListView({ when, page, setPage, viewerTz, now, onEdit, onSchedule }) {
     return when === "upcoming" ? (
       <EmptyState
         title="No upcoming interviews"
-        action={<button onClick={onSchedule} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">Schedule an interview</button>}
+        action={<button onClick={onSchedule} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">Schedule an interview</button>}
       >
         When you schedule one, it shows up here with the meeting link and your prep notes.
       </EmptyState>
@@ -67,9 +67,9 @@ function ListView({ when, page, setPage, viewerTz, now, onEdit, onSchedule }) {
       <Agenda items={data.items} viewerTz={viewerTz} now={now} onEdit={onEdit} />
       {meta.totalPages > 1 && (
         <nav aria-label="Pagination" className="flex items-center justify-end gap-2 text-sm">
-          <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-md border border-slate-300 bg-white px-3 py-2 disabled:opacity-40">‹ {when === "past" ? "Newer" : "Earlier"}</button>
-          <span className="text-slate-600">{page} / {meta.totalPages}</span>
-          <button disabled={page >= meta.totalPages} onClick={() => setPage(page + 1)} className="rounded-md border border-slate-300 bg-white px-3 py-2 disabled:opacity-40">{when === "past" ? "Older" : "Later"} ›</button>
+          <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border border-line bg-white px-3 py-2 disabled:opacity-40">‹ {when === "past" ? "Newer" : "Earlier"}</button>
+          <span className="text-ink-2">{page} / {meta.totalPages}</span>
+          <button disabled={page >= meta.totalPages} onClick={() => setPage(page + 1)} className="rounded-lg border border-line bg-white px-3 py-2 disabled:opacity-40">{when === "past" ? "Older" : "Later"} ›</button>
         </nav>
       )}
     </div>
@@ -104,11 +104,11 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <section aria-label={`Calendar, ${monthLabel}`} className="rounded-lg border border-slate-200 bg-white p-3">
+      <section aria-label={`Calendar, ${monthLabel}`} className="card p-3">
         <div className="mb-2 flex items-center justify-between">
-          <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="rounded px-2 py-1 hover:bg-slate-100">‹</button>
+          <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="rounded px-2 py-1 hover:bg-subtle">‹</button>
           <h2 className="font-medium">{monthLabel}</h2>
-          <button onClick={() => shiftMonth(1)} aria-label="Next month" className="rounded px-2 py-1 hover:bg-slate-100">›</button>
+          <button onClick={() => shiftMonth(1)} aria-label="Next month" className="rounded px-2 py-1 hover:bg-subtle">›</button>
         </div>
         <div className="grid grid-cols-7 text-center text-xs text-slate-500" aria-hidden>
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="py-1">{d}</div>)}
@@ -126,13 +126,13 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
                 }}
                 aria-pressed={d === selectedDay}
                 aria-label={`${formatDayKey(d, { weekday: "long", year: "numeric" })}${count ? `, ${count} interview${count > 1 ? "s" : ""}` : ""}`}
-                className={`flex aspect-square flex-col items-center justify-start rounded-md p-1 text-sm sm:aspect-auto sm:h-16 ${
-                  d === selectedDay ? "bg-indigo-600 text-white" : inMonth ? "hover:bg-slate-100" : "text-slate-400 hover:bg-slate-50"
+                className={`flex aspect-square flex-col items-center justify-start rounded-lg p-1 text-sm sm:aspect-auto sm:h-16 ${
+                  d === selectedDay ? "bg-brand-600 text-white" : inMonth ? "hover:bg-subtle" : "text-slate-400 hover:bg-canvas"
                 }`}
               >
-                <span className={d === today && d !== selectedDay ? "font-bold text-indigo-600" : ""}>{Number(d.slice(8))}</span>
+                <span className={d === today && d !== selectedDay ? "font-bold text-brand-600" : ""}>{Number(d.slice(8))}</span>
                 {count > 0 && (
-                  <span className={`mt-1 rounded-full px-1.5 text-[10px] font-semibold ${d === selectedDay ? "bg-white text-indigo-700" : "bg-violet-100 text-violet-700"}`}>
+                  <span className={`mt-1 rounded-full px-1.5 text-[10px] font-semibold ${d === selectedDay ? "bg-white text-brand-700" : "bg-violet-100 text-violet-700"}`}>
                     {count}
                   </span>
                 )}
@@ -145,13 +145,13 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
       <section aria-labelledby="selected-day">
         <h2 id="selected-day" className="mb-2 font-medium">{formatDayKey(selectedDay, { weekday: "long", year: "numeric" })}</h2>
         {byDay[selectedDay]?.length ? (
-          <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+          <ul className="divide-y divide-line-subtle card">
             {byDay[selectedDay].map((i) => (
               <InterviewItem key={i.id} interview={i} application={i.application} viewerTz={viewerTz} now={now} onEdit={onEdit} />
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">No interviews on this day.</p>
+          <p className="rounded-lg border border-dashed border-line bg-white p-6 text-center text-sm text-slate-500">No interviews on this day.</p>
         )}
       </section>
     </div>
@@ -190,20 +190,20 @@ export function InterviewsView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Interviews</h1>
-        <button onClick={onSchedule} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+        <h1 className="text-h1 font-semibold text-ink">Interviews</h1>
+        <button onClick={onSchedule} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
           + Schedule interview
         </button>
       </div>
 
-      <div role="tablist" aria-label="Interview views" className="flex gap-1 border-b border-slate-200">
+      <div role="tablist" aria-label="Interview views" className="flex gap-1 border-b border-line">
         {VIEWS.map((v) => (
           <button
             key={v.value}
             role="tab"
             aria-selected={view === v.value}
             onClick={() => setParams({ view: v.value, page: null })}
-            className="-mb-px border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 aria-selected:border-indigo-600 aria-selected:text-indigo-700"
+            className="-mb-px border-b-2 border-transparent px-3 py-2 text-sm font-medium text-ink-2 hover:text-ink aria-selected:border-brand-600 aria-selected:text-brand-700"
           >
             {v.label}
           </button>

@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { BrandPanel } from "@/components/auth/BrandPanel";
 import { Logo } from "@/components/Logo";
 
 export default function AuthLayout({ children }) {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="mb-6 flex justify-center">
-          <Logo className="text-xl" />
+    <div className="flex min-h-screen bg-white">
+      <BrandPanel />
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-12">
+        <Link href="/" className="mb-10 lg:hidden">
+          <Logo />
         </Link>
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">{children}</div>
-      </div>
-    </main>
+        <div className="w-full max-w-[400px]">{children}</div>
+      </main>
+    </div>
   );
 }

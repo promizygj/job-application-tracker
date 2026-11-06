@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AuthHeading } from "@/components/auth/AuthHeading";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = { title: "Log in" };
@@ -6,8 +7,7 @@ export const metadata = { title: "Log in" };
 export default function LoginPage() {
   return (
     <>
-      <h1 className="mb-1 text-xl font-semibold">Welcome back</h1>
-      <p className="mb-6 text-sm text-slate-600">Log in to your job search dashboard.</p>
+      <AuthHeading title="Welcome back">Log in to keep tracking your applications.</AuthHeading>
       <Suspense>
         <LoginForm />
       </Suspense>

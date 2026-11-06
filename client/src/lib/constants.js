@@ -1,13 +1,14 @@
 // Labels and colours shared by every page. Colour is always paired with the text label.
+// badge = pill background + text (Figma StatusBadge), dot = the 6px dot and chart/legend colour.
 
 export const STATUSES = [
-  { value: "SAVED", label: "Saved", badge: "bg-slate-100 text-slate-700 ring-slate-300" },
-  { value: "APPLIED", label: "Applied", badge: "bg-blue-50 text-blue-700 ring-blue-200" },
-  { value: "ASSESSMENT", label: "Assessment", badge: "bg-amber-50 text-amber-800 ring-amber-200" },
-  { value: "INTERVIEW", label: "Interview", badge: "bg-violet-50 text-violet-700 ring-violet-200" },
-  { value: "OFFER", label: "Offer", badge: "bg-green-50 text-green-700 ring-green-200" },
-  { value: "REJECTED", label: "Rejected", badge: "bg-red-50 text-red-700 ring-red-200" },
-  { value: "WITHDRAWN", label: "Withdrawn", badge: "bg-zinc-100 text-zinc-600 ring-zinc-300" },
+  { value: "SAVED", label: "Saved", badge: "bg-slate-100 text-ink-2", dot: "#94a3b8" },
+  { value: "APPLIED", label: "Applied", badge: "bg-blue-50 text-blue-700", dot: "#3b82f6" },
+  { value: "ASSESSMENT", label: "Assessment", badge: "bg-brand-50 text-brand-700", dot: "#8b5cf6" },
+  { value: "INTERVIEW", label: "Interview", badge: "bg-amber-100 text-amber-700", dot: "#f59e0b" },
+  { value: "OFFER", label: "Offer", badge: "bg-emerald-100 text-emerald-700", dot: "#10b981" },
+  { value: "REJECTED", label: "Rejected", badge: "bg-red-100 text-red-700", dot: "#ef4444" },
+  { value: "WITHDRAWN", label: "Withdrawn", badge: "bg-zinc-100 text-zinc-600", dot: "#71717a" },
 ];
 export const STATUS = Object.fromEntries(STATUSES.map((s) => [s.value, s]));
 
@@ -64,10 +65,10 @@ export const INTERVIEW_TYPES = [
 ];
 
 export const OUTCOMES = [
-  { value: "PENDING", label: "Pending", badge: "bg-slate-100 text-slate-700 ring-slate-300" },
-  { value: "PASSED", label: "Passed", badge: "bg-green-50 text-green-700 ring-green-200" },
-  { value: "FAILED", label: "Not progressed", badge: "bg-red-50 text-red-700 ring-red-200" },
-  { value: "CANCELLED", label: "Cancelled", badge: "bg-zinc-100 text-zinc-600 ring-zinc-300" },
+  { value: "PENDING", label: "Pending", badge: "bg-slate-100 text-ink-2", dot: "#94a3b8" },
+  { value: "PASSED", label: "Passed", badge: "bg-emerald-100 text-emerald-700", dot: "#10b981" },
+  { value: "FAILED", label: "Not progressed", badge: "bg-red-100 text-red-700", dot: "#ef4444" },
+  { value: "CANCELLED", label: "Cancelled", badge: "bg-zinc-100 text-zinc-600", dot: "#71717a" },
 ];
 export const OUTCOME = Object.fromEntries(OUTCOMES.map((o) => [o.value, o]));
 

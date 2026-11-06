@@ -15,12 +15,22 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default("JobTrack <no-reply@jobtrack.local>"),
-  // File storage. "local" writes to UPLOAD_DIR (relative to the server folder); cloudinary/s3 come later.
-  STORAGE_DRIVER: z.enum(["local"]).default("local"),
+  // File storage: "local" writes to UPLOAD_DIR (dev); "cloudinary" uses CLOUDINARY_URL (production).
+  STORAGE_DRIVER: z.enum(["local", "cloudinary"]).default("local"),
   UPLOAD_DIR: z.string().default("uploads"),
+  CLOUDINARY_URL: z.string().startsWith("cloudinary://", "CLOUDINARY_URL looks like cloudinary://<key>:<secret>@<cloud>").optional(),
+  CLOUDINARY_FOLDER: z.string().default("jat"),
+  // How many proxies sit in front of the API (sets Express "trust proxy", so rate limits see the visitor's IP).
+  // 1 = only Render's load balancer; 2 = Vercel's rewrite proxy + Render (production).
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(1),
 });
 
-const parsed = schema.safeParse(process.env);
+const parsed = schema
+  .refine((e) => e.STORAGE_DRIVER !== "cloudinary" || e.CLOUDINARY_URL, {
+    path: ["CLOUDINARY_URL"],
+    message: "Required when STORAGE_DRIVER=cloudinary",
+  })
+  .safeParse(process.env);
 if (!parsed.success) {
   console.error("❌ Invalid environment variables:", z.flattenError(parsed.error).fieldErrors);
   process.exit(1);

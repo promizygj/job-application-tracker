@@ -1,10 +1,53 @@
 @import "tailwindcss";
 
+/* Design tokens from the "JobTrack — App Redesign" Figma file. */
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+
+  --color-ink: #0f172a; /* text/primary */
+  --color-ink-2: #475569; /* text/secondary */
+  --color-ink-3: #94a3b8; /* text/muted */
+  --color-line: #e2e8f0; /* border/default */
+  --color-line-subtle: #f1f5f9; /* border/subtle */
+  --color-canvas: #f8fafc; /* bg/canvas */
+  --color-subtle: #f1f5f9; /* bg/subtle */
+
+  --shadow-card: 0 1px 3px 0 rgb(15 23 41 / 0.06), 0 1px 2px -1px rgb(15 23 41 / 0.04);
+  --shadow-pop: 0 12px 32px -8px rgb(15 23 41 / 0.18), 0 2px 6px rgb(15 23 41 / 0.06);
+
+  --text-h1: 28px;
+  --text-h1--line-height: 36px;
+  --text-h1--letter-spacing: -0.56px;
+  --text-h2: 20px;
+  --text-h2--line-height: 28px;
+  --text-h2--letter-spacing: -0.2px;
+  --text-stat: 30px;
+  --text-stat--line-height: 38px;
+  --text-stat--letter-spacing: -0.6px;
+  --text-caps: 11px;
+  --text-caps--line-height: 16px;
+  --text-caps--letter-spacing: 0.66px;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-canvas text-ink;
+}
+
+/* Inputs, selects and textareas share one look (TextField in Figma). */
+@utility field {
+  @apply block w-full rounded-lg border border-line bg-white px-3 text-sm text-ink outline-none placeholder:text-ink-3 focus:border-brand-600 focus:ring-[3px] focus:ring-brand-100 disabled:bg-subtle disabled:text-ink-3;
+}
+
+/* White card with the Figma "Shadow/Card" effect. */
+@utility card {
+  @apply rounded-xl border border-line bg-white shadow-card;
 }

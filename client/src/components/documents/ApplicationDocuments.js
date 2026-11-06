@@ -51,11 +51,11 @@ export function ApplicationDocuments({ app }) {
   return (
     <div className="space-y-4">
       {app.documents.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-line bg-white p-8 text-center text-sm text-slate-500">
           No documents attached. Attach the CV and cover letter you sent, so you know which version went where.
         </p>
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+        <ul className="divide-y divide-line-subtle card">
           {app.documents.map((d) => (
             <li key={d.id} className="flex flex-col gap-2 p-4 text-sm sm:flex-row sm:items-center">
               <span aria-hidden>{d.type === "COVER_LETTER" ? "📝" : "📄"}</span>
@@ -69,9 +69,9 @@ export function ApplicationDocuments({ app }) {
               </div>
               <div className="flex gap-1">
                 {d.mimeType === "application/pdf" && (
-                  <button onClick={() => open(d, true)} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-100">Preview</button>
+                  <button onClick={() => open(d, true)} className="rounded px-2 py-1 text-slate-700 hover:bg-subtle">Preview</button>
                 )}
-                <button onClick={() => open(d, false)} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-100">Download</button>
+                <button onClick={() => open(d, false)} className="rounded px-2 py-1 text-slate-700 hover:bg-subtle">Download</button>
                 <button onClick={() => detach(d)} className="rounded px-2 py-1 text-red-600 hover:bg-red-50">Detach</button>
               </div>
             </li>
@@ -79,7 +79,7 @@ export function ApplicationDocuments({ app }) {
         </ul>
       )}
 
-      <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-2 card p-4 sm:flex-row sm:items-end">
         {options.length > 0 ? (
           <>
             <Select
@@ -104,7 +104,7 @@ export function ApplicationDocuments({ app }) {
         ) : (
           <p className="flex-1 text-sm text-slate-500">
             {library.length ? "Every document in your library is attached." : "Your document library is empty."}{" "}
-            <Link href="/documents" className="text-indigo-600 hover:underline">Manage documents</Link>
+            <Link href="/documents" className="text-brand-600 hover:underline">Manage documents</Link>
           </p>
         )}
         <Button

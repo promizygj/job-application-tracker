@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Alert } from "@/components/ui/Alert";
+import { Pill } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { ErrorState, Spinner } from "@/components/ui/States";
@@ -10,13 +12,30 @@ import { allTimeZones, browserTimeZone } from "@/lib/time";
 import { getApiError, useGetMeQuery, useRequestEmailChangeMutation, useResendVerificationMutation, useUpdateMeMutation } from "@/store/apiSlice";
 import { useToast } from "@/store/hooks";
 
-export function Card({ title, description, children, tone = "default" }) {
+/** Settings section (Figma): header with title + description, body, optional grey footer for actions. */
+export function Card({ title, description, children, footer, tone = "default", as: Tag = "section", ...props }) {
   return (
-    <section className={`rounded-lg border bg-white p-4 sm:p-6 ${tone === "danger" ? "border-red-200" : "border-slate-200"}`}>
-      <h2 className={`font-semibold ${tone === "danger" ? "text-red-700" : ""}`}>{title}</h2>
-      {description && <p className="mt-1 text-sm text-slate-600">{description}</p>}
-      <div className="mt-4">{children}</div>
-    </section>
+    <Tag className="card overflow-hidden" {...props}>
+      <div className="border-b border-line-subtle px-6 py-5">
+        <h2 className={`text-base leading-6 font-semibold ${tone === "danger" ? "text-red-700" : "text-ink"}`}>{title}</h2>
+        {description && <p className="mt-0.5 text-xs leading-4 text-ink-2">{description}</p>}
+      </div>
+      <div className="px-6 py-5">{children}</div>
+      {footer && <div className="flex justify-end gap-2 border-t border-line-subtle bg-canvas px-6 py-4">{footer}</div>}
+    </Tag>
+  );
+}
+
+/** Title + description on the left, control on the right (Figma settings rows). */
+export function Row({ title, description, children }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle py-4 first:pt-0 last:border-b-0 last:pb-0">
+      <div className="min-w-0">
+        <p className="text-sm leading-5 font-semibold text-ink">{title}</p>
+        {description && <p className="text-xs leading-4 text-ink-2">{description}</p>}
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -55,24 +74,44 @@ function ProfileForm({ me }) {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
-      <Input label="Name *" autoComplete="name" {...field("name")} />
-      <Input label="Headline" placeholder="e.g. Frontend developer" maxLength={160} {...field("headline")} />
-      <Input label="Location" placeholder="e.g. Lagos, Nigeria" maxLength={100} {...field("location")} />
-      <div>
-        <Select label="Time zone" options={zones.map((z) => ({ value: z, label: z.replace(/_/g, " ") }))} {...field("timezone")} />
-        {values.timezone !== deviceTz && zones.includes(deviceTz) ? (
-          <button type="button" onClick={() => setValues((v) => ({ ...v, timezone: deviceTz }))} className="mt-1 text-xs text-indigo-600 hover:underline">
-            Use this device&apos;s time zone ({deviceTz.replace(/_/g, " ")})
-          </button>
-        ) : (
-          <p className="mt-1 text-xs text-slate-500">Interview times and weekly stats use this zone.</p>
-        )}
+    <Card
+      as="form"
+      onSubmit={submit}
+      noValidate
+      title="Profile"
+      description="Your personal details. Only you can see this."
+      footer={
+        <>
+          <Button type="button" variant="secondary" disabled={!dirty || isLoading} onClick={() => setValues(initial)}>Cancel</Button>
+          <Button type="submit" loading={isLoading} disabled={!dirty}>Save changes</Button>
+        </>
+      }
+    >
+      <div className="mb-5 flex items-center gap-4">
+        <span aria-hidden className="grid size-14 place-items-center rounded-full bg-brand-100 text-xl font-semibold text-brand-700">
+          {me.name?.[0]?.toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm leading-5 font-semibold text-ink">{me.name}</p>
+          <p className="truncate text-xs leading-4 text-ink-3">{me.headline || me.email}</p>
+        </div>
       </div>
-      <div className="flex justify-end sm:col-span-2">
-        <Button type="submit" loading={isLoading} disabled={!dirty}>Save profile</Button>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input label="Full name *" autoComplete="name" {...field("name")} />
+        <Input label="Headline" placeholder="e.g. Frontend developer" maxLength={160} {...field("headline")} />
+        <Input label="Location" icon="mapPin" placeholder="e.g. Lagos, Nigeria" maxLength={100} {...field("location")} />
+        <div>
+          <Select label="Time zone" options={zones.map((z) => ({ value: z, label: z.replace(/_/g, " ") }))} {...field("timezone")} />
+          {values.timezone !== deviceTz && zones.includes(deviceTz) ? (
+            <button type="button" onClick={() => setValues((v) => ({ ...v, timezone: deviceTz }))} className="mt-1.5 text-xs text-brand-600 hover:underline">
+              Use this device&apos;s time zone ({deviceTz.replace(/_/g, " ")})
+            </button>
+          ) : (
+            <p className="mt-1.5 text-xs text-ink-3">Interview times and weekly stats use this zone.</p>
+          )}
+        </div>
       </div>
-    </form>
+    </Card>
   );
 }
 
@@ -114,22 +153,35 @@ function EmailSection({ me }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium">{me.email}</span>
-        {me.emailVerified ? (
-          <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200 ring-inset">Verified</span>
-        ) : (
-          <>
-            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-200 ring-inset">Not verified</span>
-            <button onClick={resendVerification} disabled={resending} className="text-xs text-indigo-600 hover:underline">Resend verification email</button>
-          </>
-        )}
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="mb-1.5 text-xs leading-4 font-medium text-ink-2">Email</p>
+          <div className="flex h-10 items-center gap-2 rounded-lg border border-line bg-white px-3">
+            <span className="min-w-0 flex-1 truncate text-sm text-ink">{me.email}</span>
+            {me.emailVerified ? (
+              <Pill className="bg-emerald-100 text-emerald-700" dot="#10b981">Verified</Pill>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                <Icon name="alert" size={12} />
+                Unverified
+              </span>
+            )}
+          </div>
+        </div>
         {!open && (
-          <button onClick={() => setOpen(true)} className="ml-auto rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">
+          <Button variant="secondary" onClick={() => setOpen(true)} className="h-10">
             Change email
-          </button>
+          </Button>
         )}
       </div>
+      {!me.emailVerified && (
+        <p className="-mt-2 text-xs text-ink-3">
+          Didn&apos;t get the email?{" "}
+          <button onClick={resendVerification} disabled={resending} className="font-medium text-brand-600 hover:underline">
+            Resend verification
+          </button>
+        </p>
+      )}
       {/* Hide once the change has gone through (the link was clicked). */}
       {sentTo && sentTo !== me.email && (
         <Alert type="success">
@@ -137,7 +189,7 @@ function EmailSection({ me }) {
         </Alert>
       )}
       {open && (
-        <form onSubmit={submit} noValidate className="grid gap-4 rounded-md bg-slate-50 p-4 sm:grid-cols-2">
+        <form onSubmit={submit} noValidate className="grid gap-4 rounded-xl border border-line-subtle bg-canvas p-4 sm:grid-cols-2">
           <Input
             label="New email"
             type="email"
@@ -170,10 +222,8 @@ export function ProfileSettings() {
   if (!me) return <Spinner />;
   return (
     <div className="space-y-6">
-      <Card title="Profile" description="How you appear in JobTrack.">
-        {/* key: reset the form to the saved values whenever they change */}
-        <ProfileForm key={`${me.name}|${me.headline}|${me.location}|${me.timezone}`} me={me} />
-      </Card>
+      {/* key: reset the form to the saved values whenever they change */}
+      <ProfileForm key={`${me.name}|${me.headline}|${me.location}|${me.timezone}`} me={me} />
       <Card title="Email" description="Used to sign in and for verification and password-reset emails.">
         <EmailSection me={me} />
       </Card>

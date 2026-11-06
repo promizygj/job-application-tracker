@@ -108,11 +108,13 @@ test("calendar, editing in the interview's own zone, board and dashboard times",
   await expect(page.getByText("Interview updated")).toBeVisible();
 
   const [interview] = (await api(page, `/api/v1/applications/${stripe.id}`)).data.application.interviews;
-  const lagos = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Lagos" }).format(new Date(interview.startsAt));
+  const at = new Date(interview.startsAt);
+  const lagosDay = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "Africa/Lagos" }).format(at);
+  const lagosTime = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Africa/Lagos" }).format(at);
   await page.goto("/board");
-  await expect(visible(page.locator('[aria-label^="Stripe,"]')).getByText(`📅`)).toContainText(lagos);
+  await expect(visible(page.locator('[aria-label^="Stripe,"]'))).toContainText(`Interview ${lagosDay}`);
   await page.goto("/dashboard");
-  await expect(page.locator("section", { hasText: "Upcoming interviews" })).toContainText(lagos);
+  await expect(page.locator("section", { hasText: "Upcoming interviews" })).toContainText(lagosTime);
 });
 
 test("schedule and delete from the application page", async ({ page }) => {

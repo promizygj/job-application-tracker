@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Tag } from "@/components/ui/Badge";
+import { Pill, Tag } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { INTERVIEW_TYPES, OUTCOME, OUTCOMES, labelOf } from "@/lib/constants";
 import { formatTime } from "@/lib/time";
@@ -11,7 +11,7 @@ import { useToast } from "@/store/hooks";
 
 export function OutcomeBadge({ outcome }) {
   const o = OUTCOME[outcome];
-  return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${o.badge}`}>{o.label}</span>;
+  return <Pill className={o.badge} dot={o.dot}>{o.label}</Pill>;
 }
 
 /**
@@ -77,8 +77,8 @@ export function InterviewItem({ interview, application, viewerTz, now, onEdit, s
           <Tag>{labelOf(INTERVIEW_TYPES, interview.type)}</Tag>
           {(isPast || interview.outcome !== "PENDING") && <OutcomeBadge outcome={interview.outcome} />}
         </div>
-        {showApplication && <p className="text-slate-600">{application.jobTitle}</p>}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-slate-600">
+        {showApplication && <p className="text-ink-2">{application.jobTitle}</p>}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-ink-2">
           {interview.interviewerName && (
             <span>
               👤 {interview.interviewerName}
@@ -86,7 +86,7 @@ export function InterviewItem({ interview, application, viewerTz, now, onEdit, s
             </span>
           )}
           {interview.meetingUrl && (
-            <a href={interview.meetingUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-indigo-600 hover:underline">
+            <a href={interview.meetingUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-600 hover:underline">
               🔗 Join meeting ↗
             </a>
           )}
@@ -108,20 +108,20 @@ export function InterviewItem({ interview, application, viewerTz, now, onEdit, s
 
       <div className="flex shrink-0 flex-wrap items-start gap-2 sm:flex-col sm:items-end">
         {isPast && (
-          <label className="flex items-center gap-1 text-xs text-slate-600">
+          <label className="flex items-center gap-1 text-xs text-ink-2">
             Outcome
             <select
               value={interview.outcome}
               onChange={setOutcome}
               disabled={savingOutcome}
-              className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs"
+              className="rounded border border-line bg-white px-1.5 py-1 text-xs"
             >
               {OUTCOMES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </label>
         )}
         <div className="flex gap-1">
-          <button onClick={() => onEdit(interview)} className="rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-100">
+          <button onClick={() => onEdit(interview)} className="rounded px-2 py-1 text-sm text-slate-700 hover:bg-subtle">
             {isPast && !interview.feedbackNotes ? "Add feedback" : "Edit"}
           </button>
           <button onClick={() => setConfirmDelete(true)} className="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-50">

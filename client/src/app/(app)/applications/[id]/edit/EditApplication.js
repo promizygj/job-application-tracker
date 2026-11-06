@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { Icon } from "@/components/ui/Icon";
 import { ApplicationForm, toFormValues } from "@/components/applications/ApplicationForm";
 import { ErrorState, Spinner } from "@/components/ui/States";
 import { getApiError, useGetApplicationQuery, useUpdateApplicationMutation } from "@/store/apiSlice";
@@ -28,13 +29,16 @@ export function EditApplication() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <Link href={`/applications/${id}`} className="text-sm text-slate-600 hover:underline">← {app.company}</Link>
-        <h1 className="mt-2 text-2xl font-semibold">Edit application</h1>
-      </div>
+    <div className="mx-auto max-w-[680px] space-y-4">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs leading-4">
+        <Link href={`/applications/${id}`} className="text-ink-3 hover:text-ink">{app.company} — {app.jobTitle}</Link>
+        <Icon name="chevronRight" size={14} className="text-ink-3" />
+        <span className="font-medium text-ink">Edit</span>
+      </nav>
       {/* key: reset the form if the application reloads with new data */}
-      <ApplicationForm key={app.updatedAt} initialValues={toFormValues(app)} submitLabel="Save changes" onSubmit={submit} />
+      <ApplicationForm key={app.updatedAt} initialValues={toFormValues(app)} title="Edit application"
+        subtitle={`${app.company} · ${app.jobTitle}`}
+        submitLabel="Save changes" onSubmit={submit} />
     </div>
   );
 }

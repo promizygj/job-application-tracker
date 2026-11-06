@@ -151,7 +151,7 @@ Card shape:
 | Method | Path | Body / Query | Response | Notes |
 |---|---|---|---|---|
 | GET | `/documents` | `type?`, `name?` | `[document]` | Sorted by type, name, newest version first. Each has `usedInCount`. |
-| POST | `/documents` ✅ | multipart: `file`, `type`, `name`, `notes?` | `201 { document }` | PDF/DOC/DOCX ≤ 5 MB, type detected from the file's bytes. Becomes version `max + 1` of `(type, name)` **and the new default**. |
+| POST | `/documents` ✅ | multipart: `file`, `type`, `name`, `notes?` | `201 { document }` | PDF/DOC/DOCX ≤ 4 MB (Vercel proxies requests and caps bodies at ~4.5 MB), type detected from the file's bytes. Becomes version `max + 1` of `(type, name)` **and the new default**. |
 | GET | `/documents/:id` | — | `{ document }` | |
 | PATCH | `/documents/:id` | `{ name?, notes?, isDefault?: true }` | `{ document }` | Renaming moves it to the other name group as its newest version. |
 | GET | `/documents/:id/download` | `inline=true?` | `{ url, expiresAt }` | Signed URL, valid 5 min. `inline=true` opens PDFs in the browser. |

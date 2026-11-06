@@ -2,7 +2,8 @@
 
 import { api } from "@/lib/api";
 
-export const MAX_BYTES = 5 * 1024 * 1024;
+// Matches the API: uploads pass through Vercel's proxy, which caps request bodies around 4.5 MB.
+export const MAX_BYTES = 4 * 1024 * 1024;
 export const ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const EXTENSIONS = /\.(pdf|docx?)$/i;
 
@@ -20,7 +21,7 @@ export function formatBytes(n) {
 /** Quick checks before uploading. The server still checks the real file contents. */
 export function checkFile(file) {
   if (!EXTENSIONS.test(file.name)) return "Only PDF, DOC and DOCX files can be uploaded.";
-  if (file.size > MAX_BYTES) return `This file is ${formatBytes(file.size)}. The limit is 5 MB.`;
+  if (file.size > MAX_BYTES) return `This file is ${formatBytes(file.size)}. The limit is 4 MB.`;
   if (file.size === 0) return "This file is empty.";
   return null;
 }

@@ -31,8 +31,8 @@ function Dropzone({ file, onFile, error }) {
           setOver(false);
           if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]);
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-8 text-center text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-indigo-300 ${
-          over ? "border-indigo-500 bg-indigo-50" : error ? "border-red-400 bg-red-50" : "border-slate-300 hover:bg-slate-50"
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-8 text-center text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-brand-200 ${
+          over ? "border-brand-500 bg-brand-50" : error ? "border-red-400 bg-red-50" : "border-line hover:bg-canvas"
         }`}
       >
         <span aria-hidden className="text-2xl">📄</span>
@@ -44,7 +44,7 @@ function Dropzone({ file, onFile, error }) {
         ) : (
           <>
             <span className="font-medium">Drop a file here, or click to choose</span>
-            <span className="text-slate-500">PDF, DOC or DOCX · up to 5 MB</span>
+            <span className="text-slate-500">PDF, DOC or DOCX · up to 4 MB</span>
           </>
         )}
         <input
@@ -147,7 +147,7 @@ function UploadForm({ preset, onClose, onUploaded }) {
       <Input label="Notes" placeholder="e.g. Tailored for frontend roles" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} />
       {uploading && (
         <div role="progressbar" aria-label="Upload progress" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="h-2 overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full bg-indigo-600 transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-full bg-brand-600 transition-all" style={{ width: `${progress}%` }} />
         </div>
       )}
       <div className="flex justify-end gap-2">
