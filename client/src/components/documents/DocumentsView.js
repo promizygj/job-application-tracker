@@ -101,11 +101,11 @@ function VersionRow({ doc, onEdit, onDelete }) {
       </div>
       <div className="flex flex-wrap gap-1 sm:justify-end">
         {!doc.isDefault && (
-          <button onClick={makeDefault} disabled={isLoading} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-100">Make default</button>
+          <button onClick={makeDefault} disabled={isLoading} className="rounded px-2 py-1 text-slate-700 hover:bg-subtle">Make default</button>
         )}
-        {isPdf && <button onClick={() => open(doc, true)} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-100">Preview</button>}
-        <button onClick={() => open(doc, false)} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-100">Download</button>
-        <button onClick={() => onEdit(doc)} className="rounded px-2 py-1 text-slate-700 hover:bg-slate-100">Rename</button>
+        {isPdf && <button onClick={() => open(doc, true)} className="rounded px-2 py-1 text-slate-700 hover:bg-subtle">Preview</button>}
+        <button onClick={() => open(doc, false)} className="rounded px-2 py-1 text-slate-700 hover:bg-subtle">Download</button>
+        <button onClick={() => onEdit(doc)} className="rounded px-2 py-1 text-slate-700 hover:bg-subtle">Rename</button>
         <button onClick={() => onDelete(doc)} className="rounded px-2 py-1 text-red-600 hover:bg-red-50">Delete</button>
       </div>
     </li>
@@ -164,26 +164,26 @@ export function DocumentsView() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Documents</h1>
+        <h1 className="text-h1 font-semibold text-ink">Documents</h1>
         <button
           onClick={() => setUpload({})}
           disabled={!verified}
           title={verified ? undefined : "Verify your email to upload"}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-200"
         >
           ⬆ Upload
         </button>
       </div>
       {me && !verified && <Alert type="warning">Verify your email address to upload documents. Use the link in the banner above to resend it.</Alert>}
 
-      <div role="tablist" aria-label="Document type" className="flex gap-1 border-b border-slate-200">
+      <div role="tablist" aria-label="Document type" className="flex gap-1 border-b border-line">
         {FILTERS.map((f) => (
           <button
             key={f.value}
             role="tab"
             aria-selected={type === f.value}
             onClick={() => setType(f.value)}
-            className="-mb-px border-b-2 border-transparent px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 aria-selected:border-indigo-600 aria-selected:text-indigo-700"
+            className="-mb-px border-b-2 border-transparent px-3 py-2 text-sm font-medium text-ink-2 hover:text-ink aria-selected:border-brand-600 aria-selected:text-brand-700"
           >
             {f.label}
           </button>
@@ -199,7 +199,7 @@ export function DocumentsView() {
           title={type ? "No documents of this type yet" : "No documents yet"}
           action={
             verified && (
-              <button onClick={() => setUpload({})} className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+              <button onClick={() => setUpload({})} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
                 Upload your CV
               </button>
             )
@@ -210,7 +210,7 @@ export function DocumentsView() {
       ) : (
         <div className="space-y-3">
           {groups.map((g) => (
-            <section key={g.key} aria-label={g.name} className="rounded-lg border border-slate-200 bg-white">
+            <section key={g.key} aria-label={g.name} className="card">
               <header className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-4 py-3">
                 <span aria-hidden>{g.type === "COVER_LETTER" ? "📝" : "📄"}</span>
                 <h2 className="font-medium">{g.name}</h2>
@@ -219,12 +219,12 @@ export function DocumentsView() {
                   {g.versions.length} version{g.versions.length > 1 ? "s" : ""}
                 </span>
                 {verified && (
-                  <button onClick={() => setUpload({ preset: { type: g.type, name: g.name } })} className="ml-auto rounded px-2 py-1 text-sm text-indigo-600 hover:bg-indigo-50">
+                  <button onClick={() => setUpload({ preset: { type: g.type, name: g.name } })} className="ml-auto rounded px-2 py-1 text-sm text-brand-600 hover:bg-brand-50">
                     + New version
                   </button>
                 )}
               </header>
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-line-subtle">
                 {g.versions.map((d) => (
                   <VersionRow key={d.id} doc={d} onEdit={setEditing} onDelete={(doc) => setDeleting({ doc })} />
                 ))}

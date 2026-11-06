@@ -12,8 +12,8 @@ test("register through the form lands on the dashboard with a verify-email banne
   await page.getByLabel("Password").fill("secret123");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("heading", { name: "Welcome, Reg" })).toBeVisible();
-  await expect(page.getByText(/Please verify .* to unlock document uploads/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to JobTrack, Reg" })).toBeVisible();
+  await expect(page.getByText(/Verify .* to unlock document uploads/)).toBeVisible();
 });
 
 test("wrong password shows a generic error", async ({ page }) => {

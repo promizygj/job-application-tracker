@@ -11,6 +11,7 @@ const CARD_SELECT = {
   company: true,
   jobTitle: true,
   employmentType: true,
+  location: true,
   salaryMin: true,
   salaryMax: true,
   salaryCurrency: true,
@@ -19,6 +20,7 @@ const CARD_SELECT = {
   position: true,
   priority: true,
   appliedAt: true,
+  createdAt: true,
   updatedAt: true,
 };
 

@@ -21,7 +21,7 @@ export function ConfirmEmail() {
       .catch((err) => setState({ status: "error", message: getErrorMessage(err) }));
   }, [token]);
 
-  if (state.status === "loading") return <p className="text-sm text-slate-600">Confirming…</p>;
+  if (state.status === "loading") return <p className="text-sm text-ink-2">Confirming…</p>;
 
   return (
     <div className="space-y-4">
@@ -32,7 +32,7 @@ export function ConfirmEmail() {
       ) : (
         <Alert type="error">{state.message} You can request a new link from Settings → Profile.</Alert>
       )}
-      <Link href="/settings/profile" className="block text-center text-sm font-medium text-indigo-600 hover:underline">
+      <Link href="/settings/profile" className="block text-center text-sm font-medium text-brand-600 hover:underline">
         Go to settings
       </Link>
     </div>

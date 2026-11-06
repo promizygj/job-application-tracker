@@ -54,7 +54,20 @@ export async function summary(userId) {
       where: { userId },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: 5,
-      select: { id: true, company: true, jobTitle: true, status: true, employmentType: true, appliedAt: true, createdAt: true },
+      select: {
+        id: true,
+        company: true,
+        jobTitle: true,
+        status: true,
+        employmentType: true,
+        location: true,
+        salaryMin: true,
+        salaryMax: true,
+        salaryCurrency: true,
+        salaryPeriod: true,
+        appliedAt: true,
+        createdAt: true,
+      },
     }),
   ]);
 

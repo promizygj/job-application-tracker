@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { Icon } from "./Icon";
 
 /**
  * Accessible modal on the native <dialog>: focus is trapped, Esc closes, the page behind is inert.
@@ -33,15 +34,17 @@ export function Modal({ open, onClose, title, children, dismissable = true, size
       onClick={(e) => {
         if (e.target === ref.current && dismissable) onClose(); // click on the backdrop
       }}
-      className={`m-auto w-[calc(100%-2rem)] ${size} rounded-lg p-0 shadow-xl backdrop:bg-slate-900/40`}
+      className={`m-auto w-[calc(100%-2rem)] ${size} rounded-2xl p-0 text-ink shadow-pop backdrop:bg-slate-900/40`}
     >
       {open && (
         <div className="max-h-[85vh] overflow-y-auto p-6">
           {title && (
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <h2 id="modal-title" className="text-lg font-semibold">{title}</h2>
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <h2 id="modal-title" className="text-h2 font-semibold">{title}</h2>
               {dismissable && (
-                <button onClick={onClose} aria-label="Close" className="rounded p-1 text-slate-500 hover:bg-slate-100">✕</button>
+                <button onClick={onClose} aria-label="Close" className="grid size-8 place-items-center rounded-lg text-ink-2 hover:bg-subtle">
+                  <Icon name="x" size={20} />
+                </button>
               )}
             </div>
           )}

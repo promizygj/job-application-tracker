@@ -19,7 +19,7 @@ export function ResetPasswordForm() {
     return (
       <div className="space-y-4">
         <Alert type="error">This reset link is missing its token.</Alert>
-        <Link href="/forgot-password" className="block text-center text-sm text-indigo-600 hover:underline">Request a new link</Link>
+        <Link href="/forgot-password" className="block text-center text-sm text-brand-600 hover:underline">Request a new link</Link>
       </div>
     );
   }

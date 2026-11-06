@@ -5,7 +5,7 @@ test("profile: save name and time zone; the change shows everywhere", async ({ p
   await login(page, createUser("settings-profile", { name: "Sam Settings" }));
   await page.getByRole("link", { name: "Settings" }).click();
   await expect(page).toHaveURL(/\/settings\/profile$/);
-  const save = page.getByRole("button", { name: "Save profile" });
+  const save = page.getByRole("button", { name: "Save changes" });
   await expect(save).toBeDisabled();
 
   await visible(page.getByLabel("Name *")).fill("Samantha Settings");
@@ -13,7 +13,7 @@ test("profile: save name and time zone; the change shows everywhere", async ({ p
   await visible(page.getByLabel("Time zone")).selectOption("Asia/Tokyo");
   await save.click();
   await expect(page.getByText("Profile saved")).toBeVisible();
-  await expect(page.locator("header").getByText("Samantha Settings")).toBeVisible();
+  await expect(page.locator("header").getByText("Samantha")).toBeVisible();
 
   await page.getByRole("link", { name: "Interviews" }).click();
   await expect(page.getByText("Times shown in Asia/Tokyo")).toBeVisible();
@@ -61,7 +61,7 @@ test("password change keeps this device signed in and signs out the others", asy
   await expect(page.getByText("Password changed. Other devices have been signed out.")).toBeVisible();
 
   await page.getByRole("link", { name: "Dashboard" }).click();
-  await expect(page.getByRole("heading", { name: "Welcome, Pat" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to JobTrack, Pat" })).toBeVisible();
   await other.goto("/dashboard");
   await expect(other).toHaveURL(/\/login/);
   await other.close();
@@ -102,6 +102,6 @@ test("mobile settings layout", async ({ page }) => {
   await login(page, createUser("settings-mobile"));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/settings/profile");
-  await expect(page.getByRole("button", { name: "Save profile" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save changes" })).toBeVisible();
   await expectNoHorizontalScroll(page);
 });

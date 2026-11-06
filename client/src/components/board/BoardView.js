@@ -17,11 +17,14 @@ import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { EmploymentTypeTag } from "@/components/ui/Badge";
+import { CompanyLogo, Tag } from "@/components/ui/Badge";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
+import { MoreMenu } from "@/components/ui/MoreMenu";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { SearchBox } from "@/components/ui/SearchBox";
-import { ErrorState, Spinner } from "@/components/ui/States";
-import { EMPLOYMENT_TYPES, STATUS, STATUSES } from "@/lib/constants";
+import { ErrorState, PageHeader, Spinner } from "@/components/ui/States";
+import { EMPLOYMENT_TYPES, STATUS, STATUSES, labelOf } from "@/lib/constants";
 import { formatDateTime, formatSalary } from "@/lib/format";
 import { getApiError, useGetBoardQuery, useGetMeQuery, useMoveApplicationMutation } from "@/store/apiSlice";
 import { useToast } from "@/store/hooks";
@@ -29,9 +32,7 @@ import { useToast } from "@/store/hooks";
 const DAY = 24 * 60 * 60 * 1000;
 const COLUMN_PREFIX = "column:";
 const columnId = (status) => `${COLUMN_PREFIX}${status}`;
-const COLLAPSED_BY_DEFAULT = ["REJECTED", "WITHDRAWN"]; // KAN-5
-
-const PRIORITY_BORDER = { HIGH: "border-l-red-400", MEDIUM: "border-l-amber-300", LOW: "border-l-slate-200" };
+const COLLAPSED_BY_DEFAULT = ["WITHDRAWN"]; // KAN-5: Rejected and Withdrawn are collapsible
 
 /**
  * Whatever is under the pointer wins (a card over its column), so narrow collapsed columns are hit exactly.
@@ -61,46 +62,73 @@ function appliedLabel(appliedAt, today) {
 
 // ───────────────────────── Card ─────────────────────────
 
-function CardBody({ card, today, timeZone, dragHandleProps, onMove, overlay = false }) {
-  const salary = formatSalary(card);
-  const applied = appliedLabel(card.appliedAt, today);
+const where = (card) => [card.location, labelOf(EMPLOYMENT_TYPES, card.employmentType)].filter(Boolean).join(" · ");
+const shortDate = (iso, timeZone) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone }).format(new Date(iso));
+const CLOSED = ["REJECTED", "WITHDRAWN"];
+
+/** Footer line of a card (Figma KanbanCard "footer"): what happens next, or how long it has been. */
+function footerFor(card, today, timeZone) {
+  if (card.nextInterviewAt) {
+    return { icon: "calendar", tone: "text-amber-700", text: `Interview ${shortDate(card.nextInterviewAt, timeZone)}` };
+  }
+  if (card.status === "OFFER") return { icon: "sparkles", tone: "text-emerald-700", text: `Offer since ${shortDate(card.updatedAt, timeZone)}` };
+  if (CLOSED.includes(card.status)) return { icon: "clock", tone: "text-ink-3", text: `Closed ${shortDate(card.updatedAt, timeZone)}` };
+  if (card.appliedAt) return { icon: "clock", tone: "text-ink-3", text: appliedLabel(card.appliedAt, today) };
+  const days = Math.floor((today - Date.parse(card.createdAt ?? card.updatedAt)) / DAY);
+  return { icon: "clock", tone: "text-ink-3", text: days <= 0 ? "Saved today" : days === 1 ? "Saved 1 day ago" : `Saved ${days} days ago` };
+}
+
+function CardBody({ card, today, timeZone, dragHandleProps, onMove, overlay = false, tilt = false }) {
+  const salary = formatSalary(card, { compact: true });
+  const footer = footerFor(card, today, timeZone);
+  const closed = CLOSED.includes(card.status);
   const stop = (e) => e.stopPropagation(); // keep clicks/keys inside controls from starting a drag
 
   return (
     <div
       {...dragHandleProps}
-      className={`rounded-md border border-l-4 border-slate-200 bg-white p-3 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-        PRIORITY_BORDER[card.priority]
-      } ${overlay ? "cursor-grabbing shadow-lg" : "cursor-grab"}`}
+      className={`flex flex-col gap-2.5 rounded-[10px] bg-white p-3.5 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+        card.status === "OFFER" ? "border-[1.5px] border-emerald-700" : "border border-line"
+      } ${closed && !overlay ? "opacity-65" : ""} ${overlay ? `cursor-grabbing shadow-pop ${tilt ? "rotate-2" : ""}` : "cursor-grab"}`}
     >
-      <Link
-        href={`/applications/${card.id}`}
-        draggable={false}
-        onKeyDown={stop}
-        className="block font-medium hover:underline focus-visible:underline focus-visible:outline-none"
-      >
-        {card.company}
-      </Link>
-      <p className="text-slate-600">{card.jobTitle}</p>
-      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
-        <EmploymentTypeTag type={card.employmentType} />
-        {salary && <span>{salary}</span>}
+      <div className="flex items-center justify-between gap-2">
+        <CompanyLogo name={card.company} size="sm" />
+        {!overlay && (
+          <MoreMenu
+            label={`More for ${card.company}`}
+            className="-m-1"
+            items={[
+              { href: `/applications/${card.id}`, label: "Open" },
+              { href: `/applications/${card.id}/edit`, label: "Edit details" },
+            ]}
+          />
+        )}
       </div>
-      {(applied || card.nextInterviewAt) && (
-        <div className="mt-2 space-y-0.5 text-xs text-slate-500">
-          {card.nextInterviewAt && <p className="font-medium text-violet-700">📅 {formatDateTime(card.nextInterviewAt, timeZone)}</p>}
-          {applied && <p>{applied}</p>}
-        </div>
-      )}
+      <div className="min-w-0 space-y-px">
+        <Link
+          href={`/applications/${card.id}`}
+          draggable={false}
+          onKeyDown={stop}
+          className="block leading-5 font-semibold break-words text-ink hover:underline focus-visible:underline focus-visible:outline-none"
+        >
+          {card.company}
+        </Link>
+        <p className="text-xs leading-4 text-ink-2">{card.jobTitle}</p>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Tag icon={<Icon name="mapPin" size={12} className="text-ink-3" />}>{where(card)}</Tag>
+        {salary && <Tag icon={<Icon name="banknote" size={12} className="text-ink-3" />}>{salary}</Tag>}
+      </div>
+      <div className="h-px bg-line-subtle" />
+      <p className={`flex items-start gap-1.5 text-xs leading-4 ${footer.tone}`}>
+        <Icon name={footer.icon} size={13} className="mt-px" />
+        {footer.text}
+      </p>
       {/* Touch-friendly alternative to dragging */}
       {onMove && (
-        <label className="mt-2 flex items-center gap-1 text-xs text-slate-500 md:hidden" onPointerDown={stop} onKeyDown={stop}>
+        <label className="flex items-center gap-1.5 text-xs text-ink-2 md:hidden" onPointerDown={stop} onKeyDown={stop}>
           Move to
-          <select
-            value={card.status}
-            onChange={(e) => onMove(card, e.target.value)}
-            className="rounded border border-slate-300 bg-white px-1 py-0.5 text-xs"
-          >
+          <select value={card.status} onChange={(e) => onMove(card, e.target.value)} className="field h-7 w-auto px-1.5 text-xs">
             {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </label>
@@ -112,18 +140,18 @@ function CardBody({ card, today, timeZone, dragHandleProps, onMove, overlay = fa
 function SortableCard({ card, today, timeZone, onMove }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
   return (
-    <li
-      ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={isDragging ? "opacity-30" : ""}
-    >
-      <CardBody
-        card={card}
-        today={today}
-        timeZone={timeZone}
-        onMove={onMove}
-        dragHandleProps={{ ...attributes, ...listeners, "aria-roledescription": "draggable card", "aria-label": `${card.company}, ${card.jobTitle}` }}
-      />
+    <li ref={setNodeRef} style={{ transform: CSS.Translate.toString(transform), transition }} className="relative">
+      {/* While dragging, the card stays mounted (it keeps keyboard focus) under the dashed "Drop zone". */}
+      <div className={isDragging ? "opacity-0" : ""}>
+        <CardBody
+          card={card}
+          today={today}
+          timeZone={timeZone}
+          onMove={onMove}
+          dragHandleProps={{ ...attributes, ...listeners, "aria-roledescription": "draggable card", "aria-label": `${card.company}, ${card.jobTitle}` }}
+        />
+      </div>
+      {isDragging && <div aria-hidden className="absolute inset-0 rounded-[10px] border-[1.5px] border-dashed border-brand-500 bg-brand-50" />}
     </li>
   );
 }
@@ -133,43 +161,60 @@ function SortableCard({ card, today, timeZone, onMove }) {
 function Column({ status, cards, collapsed, onToggle, today, timeZone, onMove }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnId(status) });
   const s = STATUS[status];
-  const ring = isOver ? "ring-2 ring-indigo-400" : "";
+  const ring = isOver ? "ring-2 ring-brand-500/60" : "";
+  const collapsible = CLOSED.includes(status); // KAN-5
 
   if (collapsed) {
     return (
-      <section ref={setNodeRef} aria-label={`${s.label} column, ${cards.length} applications, collapsed`} className={`w-12 shrink-0 rounded-lg bg-slate-100 ${ring}`}>
+      <section ref={setNodeRef} aria-label={`${s.label} column, ${cards.length} applications, collapsed`} className={`w-10 shrink-0 self-start rounded-xl bg-subtle ${ring}`}>
         <button
           onClick={onToggle}
           aria-expanded={false}
-          className="flex h-full min-h-64 w-full flex-col items-center gap-3 rounded-lg py-3 text-sm text-slate-600 hover:bg-slate-200/60"
+          aria-label={`Expand ${s.label}`}
+          className="flex h-full min-h-64 w-full flex-col items-center gap-3 rounded-xl py-3 text-sm font-semibold text-ink hover:bg-slate-200/60"
         >
-          <span aria-hidden>▸</span>
+          <span aria-hidden className="size-2 rounded-full" style={{ background: s.dot }} />
           <span className="[writing-mode:vertical-rl]">{s.label}</span>
-          <span className="rounded-full bg-white px-1.5 text-xs font-medium">{cards.length}</span>
+          <span className="rounded-full bg-white px-[7px] py-px text-xs leading-4 font-medium text-ink-2">{cards.length}</span>
         </button>
       </section>
     );
   }
 
   return (
-    <section aria-label={`${s.label} column, ${cards.length} applications`} className={`flex w-72 shrink-0 flex-col rounded-lg bg-slate-100 ${ring}`}>
-      <header className="flex items-center gap-2 px-3 pt-3 pb-1">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${s.badge}`}>{s.label}</span>
-        <span className="text-sm text-slate-500">{cards.length}</span>
-        <button onClick={onToggle} aria-expanded aria-label={`Collapse ${s.label}`} className="ml-auto rounded px-1.5 text-slate-500 hover:bg-slate-200">
-          ◂
-        </button>
+    <section
+      aria-label={`${s.label} column, ${cards.length} applications`}
+      className={`flex min-w-[160px] flex-1 basis-0 flex-col gap-2.5 rounded-xl bg-subtle px-2 py-3 ${ring}`}
+    >
+      <header className="flex items-center gap-1.5 px-1 pb-1">
+        <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: s.dot }} />
+        <h2 className="shrink-0 text-sm leading-5 font-semibold whitespace-nowrap text-ink">
+          {collapsible ? (
+            // KAN-5: Rejected and Withdrawn collapse by clicking their title.
+            <button onClick={onToggle} aria-expanded title={`Collapse ${s.label}`} className="rounded hover:underline">
+              {s.label}
+            </button>
+          ) : (
+            s.label
+          )}
+        </h2>
+        <span className="shrink-0 rounded-full bg-white px-[7px] py-px text-xs leading-4 font-medium text-ink-2 tabular-nums">{cards.length}</span>
+        <span className="min-w-0 flex-1" />
+        <Link href={`/applications/new?status=${status}`} aria-label={`Add to ${s.label}`} className="grid size-5 shrink-0 place-items-center rounded text-ink-3 hover:text-ink">
+          <Icon name="plus" size={16} />
+        </Link>
       </header>
       <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-        <ul ref={setNodeRef} className="flex min-h-24 flex-1 flex-col gap-2 p-2">
+        <ul ref={setNodeRef} className="flex min-h-16 flex-col gap-2.5">
           {cards.map((card) => <SortableCard key={card.id} card={card} today={today} timeZone={timeZone} onMove={onMove} />)}
-          {cards.length === 0 && (
-            <li className="rounded-md border-2 border-dashed border-slate-300 p-4 text-center text-xs text-slate-500">Drop cards here</li>
-          )}
         </ul>
       </SortableContext>
-      <Link href={`/applications/new?status=${status}`} className="mx-2 mb-2 rounded-md px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-200">
-        + Add
+      <Link
+        href={`/applications/new?status=${status}`}
+        className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-line py-2.5 text-xs leading-4 font-medium text-ink-3 hover:border-brand-200 hover:bg-white hover:text-brand-600"
+      >
+        <Icon name="plus" size={14} />
+        Add application
       </Link>
     </section>
   );
@@ -229,6 +274,7 @@ export function BoardView() {
   );
   const columns = drag?.columns ?? serverIds;
   const filtered = Boolean(q || types.length);
+  const [showFilters, setShowFilters] = useState(filtered);
 
   const name = (id) => cardsById[id]?.company ?? "card";
   const label = (id) => STATUS[findColumn(id, columns)]?.label ?? "the board";
@@ -241,9 +287,9 @@ export function BoardView() {
     }
   }
 
-  function onDragStart({ active }) {
+  function onDragStart({ active, activatorEvent }) {
     const from = findColumn(active.id, serverIds);
-    setDrag({ activeId: active.id, from, fromIndex: serverIds[from].indexOf(active.id), columns: serverIds });
+    setDrag({ activeId: active.id, from, fromIndex: serverIds[from].indexOf(active.id), columns: serverIds, keyboard: activatorEvent?.type === "keydown" });
   }
 
   // Moving over another column: move the card into it right away, so the drop slot opens up there.
@@ -291,25 +337,38 @@ export function BoardView() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Board</h1>
-        <Link href="/applications/new" className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
-          + New application
-        </Link>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Board" subtitle="Drag cards between stages to update their status.">
+        <Button variant="secondary" icon="filter" onClick={() => setShowFilters((v) => !v)} aria-expanded={showFilters}>
+          Filters
+        </Button>
+        <ButtonLink href="/applications/new" icon="plus">New application</ButtonLink>
+      </PageHeader>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <SearchBox key={q === "" ? "empty" : "q"} value={q} onSearch={(value) => update({ q: value })} label="Filter cards" placeholder="Filter cards…" />
-        <MultiSelect label="Type" options={EMPLOYMENT_TYPES} value={types} onChange={(employmentType) => update({ employmentType })} />
-        {filtered && (
-          <button onClick={() => update({ q: "", employmentType: [] })} className="rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-100">
-            ✕ Clear
-          </button>
-        )}
-      </div>
+      {showFilters && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <SearchBox
+            key={q === "" ? "empty" : "q"}
+            value={q}
+            onSearch={(value) => update({ q: value })}
+            label="Filter cards"
+            placeholder="Filter by company or role"
+            className="sm:w-72"
+          />
+          <MultiSelect label="Type" options={EMPLOYMENT_TYPES} value={types} onChange={(employmentType) => update({ employmentType })} />
+          {filtered && (
+            <button
+              onClick={() => update({ q: "", employmentType: [] })}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-ink-2 hover:bg-subtle"
+            >
+              <Icon name="x" size={14} />
+              Clear
+            </button>
+          )}
+        </div>
+      )}
 
-      <p className="text-xs text-slate-500">
+      <p className="sr-only">
         Drag cards between columns, or focus a card and press Space, then the arrow keys. On a phone, use “Move to” on each card.
       </p>
 
@@ -327,23 +386,22 @@ export function BoardView() {
           onDragCancel={() => setDrag(null)}
           accessibility={{ announcements }}
         >
-          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
+          <div className="-mx-4 flex items-start gap-3 overflow-x-auto px-4 pb-4 sm:-mx-8 sm:px-8">
             {STATUSES.map(({ value: status }) => (
-              <div key={status} className="snap-start">
-                <Column
-                  status={status}
-                  cards={(columns[status] ?? []).map((id) => cardsById[id]).filter(Boolean)}
-                  collapsed={collapsed.has(status)}
-                  onToggle={() => toggle(status)}
-                  today={today}
-                  timeZone={me.timezone}
-                  onMove={(card, to) => to !== card.status && commitMove(card.id, to, null)}
-                />
-              </div>
+              <Column
+                key={status}
+                status={status}
+                cards={(columns[status] ?? []).map((id) => cardsById[id]).filter(Boolean)}
+                collapsed={collapsed.has(status)}
+                onToggle={() => toggle(status)}
+                today={today}
+                timeZone={me.timezone}
+                onMove={(card, to) => to !== card.status && commitMove(card.id, to, null)}
+              />
             ))}
           </div>
           <DragOverlay>
-            {drag && cardsById[drag.activeId] ? <CardBody card={cardsById[drag.activeId]} today={today} timeZone={me.timezone} overlay /> : null}
+            {drag && cardsById[drag.activeId] ? <CardBody card={cardsById[drag.activeId]} today={today} timeZone={me.timezone} overlay tilt={!drag.keyboard} /> : null}
           </DragOverlay>
         </DndContext>
       )}

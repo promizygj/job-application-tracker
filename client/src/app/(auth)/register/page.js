@@ -1,3 +1,4 @@
+import { AuthHeading } from "@/components/auth/AuthHeading";
 import { RegisterForm } from "./RegisterForm";
 
 export const metadata = { title: "Create account" };
@@ -5,8 +6,7 @@ export const metadata = { title: "Create account" };
 export default function RegisterPage() {
   return (
     <>
-      <h1 className="mb-1 text-xl font-semibold">Create your account</h1>
-      <p className="mb-6 text-sm text-slate-600">Start tracking your applications in minutes.</p>
+      <AuthHeading title="Create your account">Track every job you apply for — from applied to offer.</AuthHeading>
       <RegisterForm />
     </>
   );

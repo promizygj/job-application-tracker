@@ -30,7 +30,7 @@ export function ForgotPasswordForm() {
     return (
       <div className="space-y-4">
         <Alert type="success">If an account exists for that email, a reset link is on its way. It expires in 1 hour.</Alert>
-        <Link href="/login" className="block text-center text-sm font-medium text-indigo-600 hover:underline">Back to log in</Link>
+        <Link href="/login" className="block text-center text-sm font-medium text-brand-600 hover:underline">Back to log in</Link>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export function ForgotPasswordForm() {
       {error && <Alert type="error">{error}</Alert>}
       <Input label="Email" name="email" type="email" autoComplete="email" required />
       <Button type="submit" loading={loading} className="w-full">Send reset link</Button>
-      <Link href="/login" className="block text-center text-sm text-indigo-600 hover:underline">Back to log in</Link>
+      <Link href="/login" className="block text-center text-sm text-brand-600 hover:underline">Back to log in</Link>
     </form>
   );
 }

@@ -41,8 +41,8 @@ test.beforeEach(async ({ page }) => {
   await expect(card(page, "Alpha")).toBeVisible();
 });
 
-test("columns render; Rejected and Withdrawn start collapsed", async ({ page }) => {
-  await expect(column(page, "Rejected")).toHaveAttribute("aria-label", /collapsed/);
+test("columns render; Withdrawn starts collapsed", async ({ page }) => {
+  await expect(column(page, "Rejected")).toHaveAttribute("aria-label", "Rejected column, 0 applications");
   await expect(column(page, "Withdrawn")).toHaveAttribute("aria-label", /collapsed/);
   await expect(column(page, "Saved")).toHaveAttribute("aria-label", "Saved column, 2 applications");
 });
@@ -73,8 +73,8 @@ test("keyboard: Space, arrow, Space moves a card and is announced", async ({ pag
 });
 
 test("drop onto a collapsed column", async ({ page }) => {
-  await drag(page, card(page, "Charlie"), column(page, "Rejected"), { where: "middle", reaim: true });
-  await expect.poll(async () => (await board(page)).REJECTED).toEqual(["Charlie"]);
+  await drag(page, card(page, "Charlie"), column(page, "Withdrawn"), { where: "middle", reaim: true });
+  await expect.poll(async () => (await board(page)).WITHDRAWN).toEqual(["Charlie"]);
 });
 
 test("a failed move snaps back and shows an error", async ({ page }) => {
@@ -91,18 +91,19 @@ test("clicking a card's name opens the application", async ({ page }) => {
   await expect(page).toHaveURL(/\/applications\/[a-z0-9]+$/);
 });
 
-test("type filter and “+ Add” with a preset status", async ({ page }) => {
+test("type filter and “Add application” with a preset status", async ({ page }) => {
+  await page.getByRole("button", { name: "Filters" }).click();
   await page.getByRole("button", { name: /^Type/ }).click();
   await visible(page.getByLabel("Hybrid")).click();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/employmentType=HYBRID/);
   await expect(card(page, "Charlie")).toBeVisible();
   await expect(card(page, "Alpha")).toHaveCount(0);
-  await page.getByRole("button", { name: "✕ Clear" }).click();
+  await page.getByRole("button", { name: "Clear", exact: true }).click();
 
-  await column(page, "Interview").getByRole("link", { name: "+ Add" }).click();
+  await column(page, "Interview").getByRole("link", { name: "Add application" }).click();
   await expect(page).toHaveURL(/\/applications\/new\?status=INTERVIEW$/);
-  await expect(visible(page.getByLabel("Status", { exact: true }))).toHaveValue("INTERVIEW");
+  await expect(visible(page.getByLabel("Interview", { exact: true }))).toBeChecked();
 });
 
 test("mobile: “Move to” works without dragging", async ({ page }) => {

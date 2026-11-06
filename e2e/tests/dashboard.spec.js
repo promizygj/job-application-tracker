@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { api, createApplication, createUser, expectNoHorizontalScroll, login } from "../helpers.js";
+import { api, createApplication, createUser, expectNoHorizontalScroll, login, visible } from "../helpers.js";
 
 const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
 const text = async (locator) => (await locator.innerText()).replace(/\s+/g, " ");
@@ -42,7 +42,7 @@ test("stat tiles, pipeline and status bars match the API", async ({ page }) => {
   await expect(statusRows).toHaveCount(7);
   await page.getByRole("link", { name: `Rejected: ${s.byStatus.REJECTED}` }).click();
   await expect(page).toHaveURL(/\/applications\?status=REJECTED$/);
-  await expect(page.getByRole("heading", { name: `Applications (${s.byStatus.REJECTED})` })).toBeVisible();
+  await expect(visible(page.getByText(new RegExp(`^${s.byStatus.REJECTED} applications?$`)))).toBeVisible();
 });
 
 test("status bar lengths are proportional to the counts", async ({ page }) => {

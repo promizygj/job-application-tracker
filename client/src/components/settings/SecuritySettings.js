@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { ErrorState, Spinner } from "@/components/ui/States";
 import { getApiError, useChangePasswordMutation, useDeleteAccountMutation, useGetMeQuery, useLogoutAllMutation } from "@/store/apiSlice";
 import { useToast } from "@/store/hooks";
-import { Card } from "./ProfileSettings";
+import { Card, Row } from "./ProfileSettings";
 
 const EMPTY = { currentPassword: "", newPassword: "", confirm: "" };
 
@@ -57,12 +57,16 @@ function ChangePassword({ me }) {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-3">
-      <Input label="Current password" autoComplete="current-password" {...field("currentPassword")} />
-      <Input label="New password" autoComplete="new-password" hint="8+ characters, a letter and a number" {...field("newPassword")} />
-      <Input label="Confirm new password" autoComplete="new-password" {...field("confirm")} />
-      <div className="flex justify-end sm:col-span-3">
-        <Button type="submit" loading={isLoading || signingIn}>Change password</Button>
+    <form onSubmit={submit} noValidate className="border-b border-line-subtle pb-5">
+      <p className="text-sm leading-5 font-semibold text-ink">Password</p>
+      <p className="text-xs leading-4 text-ink-2">Changing it signs out your other devices.</p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <Input label="Current password" autoComplete="current-password" {...field("currentPassword")} />
+        <Input label="New password" autoComplete="new-password" hint="8+ characters, a letter and a number" {...field("newPassword")} />
+        <Input label="Confirm new password" autoComplete="new-password" {...field("confirm")} />
+      </div>
+      <div className="mt-4 flex justify-end">
+        <Button type="submit" variant="secondary" loading={isLoading || signingIn}>Change password</Button>
       </div>
     </form>
   );
@@ -85,7 +89,7 @@ function SignOutEverywhere() {
 
   return (
     <>
-      <Button variant="secondary" onClick={() => setConfirming(true)}>Sign out everywhere</Button>
+      <Button variant="secondary" icon="logout" onClick={() => setConfirming(true)}>Sign out everywhere</Button>
       <ConfirmDialog
         open={confirming}
         title="Sign out of every device?"
@@ -120,9 +124,12 @@ function DeleteAccount({ me }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-600">
-        This permanently deletes your applications, interviews, documents (including the uploaded files) and your account. It can&apos;t be undone.
-      </p>
+      <div>
+        <p className="text-sm leading-5 font-semibold text-ink">Delete account</p>
+        <p className="text-xs leading-4 text-ink-2">
+          Permanently deletes your applications, interviews, documents (including the uploaded files) and your account. This can&apos;t be undone.
+        </p>
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label={`Type ${me.email} to confirm`} autoComplete="off" value={typedEmail} onChange={(e) => setTypedEmail(e.target.value)} />
         <Input
@@ -141,7 +148,7 @@ function DeleteAccount({ me }) {
         <Button
           onClick={() => setConfirming(true)}
           disabled={!emailMatches || !password}
-          className="bg-red-600 hover:bg-red-500 disabled:bg-red-300"
+          variant="danger"
         >
           Delete my account
         </Button>
@@ -167,13 +174,15 @@ export function SecuritySettings() {
   if (!me) return <Spinner />;
   return (
     <div className="space-y-6">
-      <Card title="Password" description="Changing it signs out your other devices.">
+      <Card title="Account & security" description="Keep your account secure.">
         <ChangePassword me={me} />
+        <div className="pt-5">
+          <Row title="Active sessions" description="Lost a device, or signed in on a shared computer? Sign out of JobTrack everywhere.">
+            <SignOutEverywhere />
+          </Row>
+        </div>
       </Card>
-      <Card title="Sessions" description="Lost a device, or signed in on a shared computer? Sign out of JobTrack everywhere.">
-        <SignOutEverywhere />
-      </Card>
-      <Card title="Delete account" tone="danger">
+      <Card title="Data & privacy" description="Permanently remove your account." tone="danger">
         <DeleteAccount me={me} />
       </Card>
     </div>

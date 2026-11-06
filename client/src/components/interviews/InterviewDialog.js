@@ -86,7 +86,7 @@ function ApplicationPicker({ value, onChange, error }) {
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search company or job title…"
         aria-label="Search applications"
-        className="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+        className="block w-full rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
       />
       <Select
         label="Application"
@@ -229,7 +229,7 @@ function InterviewForm({ interview, application, defaultTz, onCancel, onSubmit }
       {formError && <Alert type="error">{formError}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
         {editing || application ? (
-          <p className="text-sm text-slate-600 sm:col-span-2">
+          <p className="text-sm text-ink-2 sm:col-span-2">
             For <strong>{application?.company ?? interview.application?.company}</strong>
             {(application?.jobTitle ?? interview?.application?.jobTitle) && ` · ${application?.jobTitle ?? interview.application.jobTitle}`}
           </p>
@@ -253,7 +253,7 @@ function InterviewForm({ interview, application, defaultTz, onCancel, onSubmit }
       </div>
       <Textarea label="Preparation notes" rows={4} placeholder="Topics to revise, questions to ask…" {...field("prepNotes")} />
       {editing && (
-        <div className="grid gap-4 rounded-md bg-slate-50 p-3 sm:grid-cols-3">
+        <div className="grid gap-4 rounded-lg bg-canvas p-3 sm:grid-cols-3">
           <Select label="Outcome" options={OUTCOMES} {...field("outcome")} />
           <Textarea label="Feedback / how it went" rows={3} className="sm:col-span-2" {...field("feedbackNotes")} />
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Icon } from "@/components/ui/Icon";
 import { removeToast } from "@/store/uiSlice";
 
 function Toast({ toast }) {
@@ -11,11 +12,16 @@ function Toast({ toast }) {
     return () => clearTimeout(t);
   }, [dispatch, toast.id]);
 
-  const color = toast.type === "error" ? "border-red-200 bg-red-50 text-red-800" : "border-green-200 bg-green-50 text-green-800";
+  const error = toast.type === "error";
   return (
-    <div className={`pointer-events-auto flex items-start gap-3 rounded-md border px-4 py-3 text-sm shadow-lg ${color}`}>
+    <div className="pointer-events-auto flex items-start gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink shadow-pop">
+      <span className={`mt-0.5 grid size-5 shrink-0 place-items-center rounded-full ${error ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+        <Icon name={error ? "alert" : "check"} size={13} />
+      </span>
       <span className="flex-1">{toast.message}</span>
-      <button onClick={() => dispatch(removeToast(toast.id))} aria-label="Dismiss" className="opacity-60 hover:opacity-100">✕</button>
+      <button onClick={() => dispatch(removeToast(toast.id))} aria-label="Dismiss" className="text-ink-3 hover:text-ink">
+        <Icon name="x" size={16} />
+      </button>
     </div>
   );
 }

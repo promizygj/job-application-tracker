@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
+import { LabelledDivider } from "@/components/auth/AuthHeading";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
 const ERRORS = {
@@ -51,23 +52,27 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {params.get("reset") && <Alert type="success">Password updated. Log in with your new password.</Alert>}
       {params.get("signedout") === "all" && <Alert type="info">You&apos;ve been signed out on every device.</Alert>}
       {params.get("deleted") && <Alert type="info">Your account and all its data have been deleted.</Alert>}
       {error && <Alert type="error">{error}</Alert>}
       <Input label="Email" name="email" type="email" autoComplete="email" required />
-      <div>
-        <Input label="Password" name="password" type="password" autoComplete="current-password" required />
-        <Link href="/forgot-password" className="mt-1 inline-block text-sm text-indigo-600 hover:underline">
-          Forgot password?
-        </Link>
-      </div>
-      <Button type="submit" loading={loading} className="w-full">Log in</Button>
-      <p className="text-center text-sm text-slate-600">
-        No account?{" "}
-        <Link href="/register" className="font-medium text-indigo-600 hover:underline">Create one</Link>
-      </p>
+      <Input
+        label="Password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        labelAction={
+          <Link href="/forgot-password" className="text-brand-600 hover:underline">
+            Forgot password?
+          </Link>
+        }
+      />
+      <Button type="submit" size="lg" loading={loading} className="w-full">Log in</Button>
+      <LabelledDivider>New to JobTrack?</LabelledDivider>
+      <ButtonLink href="/register" variant="secondary" size="lg" className="w-full">Create an account</ButtonLink>
     </form>
   );
 }
