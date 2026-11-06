@@ -1,3 +1,13 @@
+// Where /api/v1/* is forwarded. Read at BUILD time: on Vercel it must be set before deploying,
+// otherwise the rewrite would point at localhost and every API call would fail.
+const API_URL = process.env.API_URL ?? (process.env.VERCEL ? null : "http://localhost:4000");
+if (!API_URL) {
+  throw new Error("API_URL is not set. Add it in Vercel → Settings → Environment Variables (your Render URL, e.g. https://jobtrack-api.onrender.com), then redeploy.");
+}
+if (process.env.VERCEL && /localhost|127\.0\.0\.1/.test(API_URL)) {
+  throw new Error(`API_URL points at ${API_URL}; on Vercel it must be your public Render URL.`);
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   cacheComponents: true,
@@ -18,7 +28,7 @@ const nextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${process.env.API_URL ?? "http://localhost:4000"}/api/v1/:path*`,
+        destination: `${API_URL.replace(/\/+$/, "")}/api/v1/:path*`,
       },
     ];
   },

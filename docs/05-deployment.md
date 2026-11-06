@@ -19,6 +19,7 @@ session cookie, so there's no CORS or cross-site cookie setup.
 | Neon (free) | 0.5 GB storage. Doesn't expire. | Plenty for this app. (Render's free PostgreSQL expires after 30 days, hence Neon.) |
 | Vercel (Hobby) | Request bodies through the proxy are capped at ~4.5 MB. | Uploads are limited to **4 MB**. |
 | Brevo (free) | 300 emails / day. | Sending from a Gmail address works but may land in spam; a custom domain fixes that later. |
+| Render web (free) | **Outbound SMTP ports 25, 465 and 587 are blocked.** | Email is sent through Brevo's **HTTP API** (`BREVO_API_KEY`), not SMTP. |
 
 ## 0. Generate production secrets (don't reuse the local ones)
 
@@ -57,7 +58,8 @@ API streams them to signed-in users through 5-minute signed links.
 ## 3. Brevo: email
 
 1. Sign up at brevo.com → **Senders, domains & dedicated IPs → Senders** → add and verify `promizygj@gmail.com`.
-2. **SMTP & API → SMTP** → note the **SMTP login** and create an **SMTP key**.
+2. **SMTP & API → API Keys** → **Generate a new API key** (name it `jobtrack`). Copy it: it starts with `xkeysib-`.
+   (Not the SMTP key: Render's free plan blocks SMTP ports, so the API sends email over HTTPS instead.)
 
 ## 4. Render: the API
 
@@ -70,12 +72,12 @@ API streams them to signed-in users through 5-minute signed links.
 | `CLIENT_URL` | `https://<project-name>.vercel.app` |
 | `AUTH_SECRET`, `INTERNAL_API_SECRET` | from step 0 |
 | `CLOUDINARY_URL` | from step 2 |
-| `SMTP_USER`, `SMTP_PASS` | Brevo SMTP login and key |
+| `BREVO_API_KEY` | Brevo API key (`xkeysib-…`) |
 | `MAIL_FROM` | `JobTrack <promizygj@gmail.com>` |
 
 3. **Apply**. When the deploy finishes, open `https://<service>.onrender.com/api/v1/health` → `{"status":"ok","db":"ok"}`.
 
-Set in `render.yaml` (no action needed): `NODE_ENV=production`, `TRUST_PROXY=2`, `STORAGE_DRIVER=cloudinary`, Brevo host/port.
+Set in `render.yaml` (no action needed): `NODE_ENV=production`, `TRUST_PROXY=2`, `STORAGE_DRIVER=cloudinary`.
 
 ## 5. Vercel: the frontend
 
@@ -110,4 +112,5 @@ Push to `main`: Vercel and Render both redeploy automatically. New Prisma migrat
 | Login says "Invalid email or password" for a correct password | `INTERNAL_API_SECRET` differs, or `API_URL` is wrong on Vercel. |
 | `/api/v1/*` returns Vercel 404s | `API_URL` was missing at build time: set it and redeploy. |
 | Render deploy fails with "Invalid environment variables" | The log lists which variable; e.g. `CLOUDINARY_URL` must start with `cloudinary://`. |
-| No emails | Check Render logs for "Failed to send email"; the sender must be verified in Brevo. |
+| No emails | Check Render logs for "Failed to send email". `Brevo API 401` = wrong key; `400` mentioning the sender = verify the `MAIL_FROM` address in Brevo. |
+| Registering spins forever | `SMTP_HOST` is set on Render's free plan (SMTP is blocked there). Remove `SMTP_HOST`/`SMTP_*` and set `BREVO_API_KEY`. |

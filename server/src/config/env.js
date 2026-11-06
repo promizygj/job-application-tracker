@@ -10,6 +10,8 @@ const schema = z.object({
   AUTH_SECRET: z.string().min(32),
   // Shared secret for server-to-server calls from the Next.js Auth.js config.
   INTERNAL_API_SECRET: z.string().min(32),
+  // Email: BREVO_API_KEY (HTTP API, works on Render's free plan) or SMTP_* (hosts that allow SMTP).
+  BREVO_API_KEY: z.string().min(10).optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
