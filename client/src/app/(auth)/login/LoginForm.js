@@ -9,6 +9,7 @@ import { LabelledDivider } from "@/components/auth/AuthHeading";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { SERVER_WAKING_MESSAGE } from "@/lib/api";
+import { SESSION_IDLE_LABEL } from "@/lib/session";
 import { collectErrors, emailError, focusFirstError, requiredError } from "@/lib/validation";
 
 const ERRORS = {
@@ -69,6 +70,9 @@ export function LoginForm() {
       {params.get("reset") && <Alert type="success">Password updated. Log in with your new password.</Alert>}
       {params.get("signedout") === "all" && <Alert type="info">You&apos;ve been signed out on every device.</Alert>}
       {params.get("deleted") && <Alert type="info">Your account and all its data have been deleted.</Alert>}
+      {params.get("expired") && (
+        <Alert type="info">You were signed out after {SESSION_IDLE_LABEL} of inactivity. Log in again to continue.</Alert>
+      )}
       {error && <Alert type="error">{error}</Alert>}
       <Input label="Email" name="email" type="email" autoComplete="email" required error={fieldErrors.email} />
       <Input

@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { Toaster } from "@/components/Toaster";
+import { IdleLogout } from "@/components/IdleLogout";
 import { Icon } from "@/components/ui/Icon";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 import { useGetMeQuery } from "@/store/apiSlice";
@@ -223,6 +224,7 @@ export function AppShell({ children }) {
       </header>
 
       <main className="px-4 py-6 sm:px-8 sm:py-8">
+        <IdleLogout />
         <VerifyEmailBanner />
         {children}
       </main>

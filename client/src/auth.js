@@ -1,5 +1,6 @@
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { SESSION_IDLE_MINUTES } from "@/lib/session";
 
 class InvalidCredentials extends CredentialsSignin {
   code = "invalid_credentials";
@@ -16,7 +17,9 @@ class ApiUnavailable extends CredentialsSignin {
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
+  // Expires after an hour without activity: every page load renews it (sliding), and <IdleLogout>
+  // renews it while the user works on one page and signs an idle tab out.
+  session: { strategy: "jwt", maxAge: SESSION_IDLE_MINUTES * 60 },
   pages: { signIn: "/login" },
   providers: [
     Credentials({
