@@ -60,8 +60,12 @@ export function allTimeZones() {
   }
 }
 
+/** Interview times, Google Calendar style: "7am", "10:30am", "2pm". */
 export function formatTime(iso, timeZone) {
-  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone }).format(new Date(iso));
+  const parts = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone }).formatToParts(new Date(iso));
+  const get = (t) => parts.find((p) => p.type === t)?.value ?? "";
+  const minute = get("minute");
+  return `${get("hour")}${minute === "00" ? "" : `:${minute}`}${get("dayPeriod").toLowerCase()}`;
 }
 
 /** "Tue 10 Nov 2026" for a YYYY-MM-DD key. */
@@ -70,3 +74,4 @@ export function formatDayKey(key, opts = {}) {
     new Date(`${key}T00:00:00Z`),
   );
 }
+

@@ -36,7 +36,8 @@ export function initials(name = "") {
   return (words.length === 1 ? words[0].slice(0, 2) : words[0][0] + words[1][0]).toUpperCase();
 }
 
-function colorFor(name = "") {
+/** Stable colour for a company (its avatar colour); also used for its calendar events. */
+export function companyColor(name = "") {
   let h = 0;
   for (const ch of name.toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
@@ -46,7 +47,7 @@ function colorFor(name = "") {
 export function CompanyLogo({ name, size = "md", className = "" }) {
   const sizes = { sm: "size-8 rounded-lg text-xs font-medium", md: "size-10 rounded-[10px] text-sm font-semibold", lg: "size-14 rounded-xl text-base font-semibold" };
   return (
-    <span aria-hidden className={`grid shrink-0 place-items-center text-white ${sizes[size]} ${className}`} style={{ background: colorFor(name) }}>
+    <span aria-hidden className={`grid shrink-0 place-items-center text-white ${sizes[size]} ${className}`} style={{ background: companyColor(name) }}>
       {initials(name)}
     </span>
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { companyColor } from "@/components/ui/Badge";
 import { EmptyState, ErrorState, Spinner } from "@/components/ui/States";
 import { dayKey, formatDayKey, formatTime } from "@/lib/time";
 import { useGetMeQuery, useListInterviewsQuery } from "@/store/apiSlice";
@@ -15,6 +16,8 @@ const VIEWS = [
 ];
 const PAGE_SIZE = 25;
 const DAY = 24 * 60 * 60 * 1000;
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const MAX_EVENTS = 3; // per day cell; the rest show as "+N"
 const addDays = (key, n) => new Date(Date.parse(`${key}T00:00:00Z`) + n * DAY).toISOString().slice(0, 10);
 
 /** Interviews grouped under day headings (in the viewer's time zone). */
@@ -85,6 +88,7 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
   // Pad a day each side so time-zone differences at the grid edges don't drop interviews.
   const { data, isLoading, isError, refetch } = useListInterviewsQuery({ from: addDays(gridStart, -1), to: addDays(days.at(-1), 1), limit: 100 });
   const [selected, setSelected] = useState(today.startsWith(month) ? today : first);
+  const dayPanel = useRef(null);
   const selectedDay = selected.startsWith(month) ? selected : first;
 
   const byDay = useMemo(() => {
@@ -102,71 +106,89 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
 
   if (isError) return <ErrorState message="Couldn't load your calendar." onRetry={refetch} />;
 
+  const selectDay = (d) => {
+    setSelected(d);
+    if (!d.startsWith(month)) setMonth(d.slice(0, 7));
+    // Bring that day's interviews into view (they're listed under the calendar).
+    if (byDay[d]?.length) requestAnimationFrame(() => dayPanel.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+  };
+
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-      <section aria-label={`Calendar, ${monthLabel}`} className="card p-3">
-        <div className="mb-2 flex items-center justify-between">
+    <div className="space-y-4">
+      <section aria-label={`Calendar, ${monthLabel}`} className="card overflow-hidden p-1.5 sm:p-0">
+        <div className="mb-2 flex items-center justify-between px-1 sm:mb-0 sm:px-4 sm:py-3">
           <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="rounded px-2 py-1 hover:bg-subtle">‹</button>
           <h2 className="font-medium">{monthLabel}</h2>
           <button onClick={() => shiftMonth(1)} aria-label="Next month" className="rounded px-2 py-1 hover:bg-subtle">›</button>
         </div>
-        <div className="grid grid-cols-7 text-center text-xs text-slate-500" aria-hidden>
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => <div key={d} className="py-1">{d}</div>)}
+        <div className="grid grid-cols-7 text-center text-xs font-medium text-ink-3 sm:border-t sm:border-line-subtle" aria-hidden>
+          {WEEKDAYS.map((d) => (
+            <div key={d} className="py-1 sm:pt-2 sm:pb-0 sm:text-[11px] sm:tracking-wide sm:uppercase">
+              <span className="sm:hidden">{d[0]}</span>
+              <span className="hidden sm:inline">{d}</span>
+            </div>
+          ))}
         </div>
-        <div className={`grid grid-cols-7 gap-1 ${isLoading ? "opacity-50" : ""}`}>
-          {days.map((d) => {
+        <div className={`grid grid-cols-7 ${isLoading ? "opacity-50" : ""}`}>
+          {days.map((d, index) => {
             const items = byDay[d] ?? [];
             const count = items.length;
             const inMonth = d.startsWith(month);
             const isSelected = d === selectedDay;
-            const busy = count > 0;
-            const tone = isSelected
-              ? "bg-brand-600 text-white"
-              : busy
-                ? `bg-brand-50 ring-1 ring-brand-200 ring-inset hover:bg-brand-100 ${inMonth ? "text-brand-800" : "text-brand-800/60"}`
-                : inMonth
-                  ? "hover:bg-subtle"
-                  : "text-slate-400 hover:bg-canvas";
+            const isToday = d === today;
+            const shown = items.slice(0, MAX_EVENTS);
+            const summary = items.map((i) => `${i.application?.company} at ${formatTime(i.startsAt, viewerTz)}`).join("; ");
+            const lastCol = index % 7 === 6;
+            const lastRow = index >= 35;
             return (
               <button
                 key={d}
-                onClick={() => {
-                  setSelected(d);
-                  if (!inMonth) setMonth(d.slice(0, 7));
-                }}
+                onClick={() => selectDay(d)}
                 aria-pressed={isSelected}
-                aria-label={`${formatDayKey(d, { weekday: "long", year: "numeric" })}${count ? `, ${count} interview${count > 1 ? "s" : ""}` : ""}`}
-                className={`flex aspect-square min-w-0 flex-col items-center justify-start gap-1 overflow-hidden rounded-lg p-1 text-sm sm:aspect-auto sm:h-24 sm:items-stretch sm:p-1.5 ${tone}`}
+                aria-label={`${formatDayKey(d, { weekday: "long", year: "numeric" })}${count ? `, ${count} interview${count > 1 ? "s" : ""}: ${summary}` : ""}`}
+                className={[
+                  "flex min-h-24 min-w-0 flex-col gap-0.5 border-line-subtle px-0.5 pt-1 pb-1.5 text-left",
+                  // Phones: rows separated by a line. Wider: a full grid like Google Calendar's month view.
+                  "border-t sm:min-h-28 sm:border-t-0 sm:px-1.5 sm:pt-1.5",
+                  lastCol ? "" : "sm:border-r",
+                  lastRow ? "" : "sm:border-b",
+                  isSelected
+                    ? "rounded-lg border-transparent bg-brand-50/60 ring-2 ring-brand-600 ring-inset sm:rounded-none sm:border-line-subtle sm:bg-brand-50/70 sm:ring-0"
+                    : "hover:bg-subtle",
+                  inMonth ? "" : "opacity-45",
+                ].join(" ")}
               >
                 <span
-                  className={`text-center sm:text-left ${busy ? "font-semibold" : ""} ${
-                    d === today && !isSelected ? "font-bold text-brand-600 underline decoration-2 underline-offset-4" : ""
+                  className={`mx-auto mb-0.5 grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold sm:mb-1 sm:text-sm ${
+                    isToday ? "bg-brand-600 text-white" : isSelected ? "sm:bg-brand-100 sm:text-brand-800" : "text-ink"
                   }`}
                 >
                   {Number(d.slice(8))}
                 </span>
-                {/* Phones: one dot per interview (max 3) */}
-                {busy && (
-                  <span aria-hidden className="flex gap-0.5 sm:hidden">
-                    {items.slice(0, 3).map((i) => (
-                      <span key={i.id} className={`size-1.5 rounded-full ${isSelected ? "bg-white" : "bg-brand-600"}`} />
-                    ))}
-                  </span>
-                )}
-                {/* Wider screens: what's on, e.g. "10:00 Acme" */}
-                {busy && (
-                  <span aria-hidden className="hidden min-w-0 flex-col gap-0.5 sm:flex">
-                    {items.slice(0, 2).map((i) => (
-                      <span
-                        key={i.id}
-                        className={`truncate rounded px-1 py-px text-left text-[11px] leading-4 font-medium ${
-                          isSelected ? "bg-white/20 text-white" : "bg-white text-brand-800 shadow-sm"
-                        }`}
-                      >
-                        {formatTime(i.startsAt, viewerTz)} {i.application?.company}
+                {shown.map((i) => {
+                  const color = companyColor(i.application?.company);
+                  return (
+                    <span key={i.id} aria-hidden title={`${formatTime(i.startsAt, viewerTz)} ${i.application?.company} · ${i.title}`} className="min-w-0">
+                      {/* Phones: colour bar + name wrapping onto 2 lines (Google Calendar app) */}
+                      <span className="flex min-w-0 gap-[3px] sm:hidden">
+                        <span className="w-[3px] shrink-0 rounded-full" style={{ background: color }} />
+                        <span className="line-clamp-2 min-w-0 text-[10px] leading-[13px] font-medium break-all text-ink">{i.application?.company}</span>
                       </span>
-                    ))}
-                    {count > 2 && <span className={`px-1 text-left text-[11px] leading-4 ${isSelected ? "text-white/80" : "text-brand-700"}`}>+{count - 2} more</span>}
+                      {/* Wider screens: dot, "2pm", bold name, on one line (Google Calendar month view) */}
+                      <span className="hidden min-w-0 items-center gap-1.5 rounded px-1 text-xs leading-[18px] text-ink sm:flex">
+                        <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />
+                        <span className="min-w-0 truncate">
+                          <span className="text-ink-2">{formatTime(i.startsAt, viewerTz)}</span>{" "}
+                          <span className="font-semibold">{i.application?.company}</span>
+                        </span>
+                      </span>
+                    </span>
+                  );
+                })}
+                {count > MAX_EVENTS && (
+                  <span aria-hidden className="pl-1 text-[10px] leading-[13px] font-medium text-ink-3 sm:pl-1 sm:text-xs sm:leading-[18px] sm:font-semibold sm:text-ink-2">
+                    <span className="sm:hidden">+{count - MAX_EVENTS}</span>
+                    <span className="hidden sm:inline">{count - MAX_EVENTS} more</span>
                   </span>
                 )}
               </button>
@@ -175,7 +197,7 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
         </div>
       </section>
 
-      <section aria-labelledby="selected-day">
+      <section ref={dayPanel} aria-labelledby="selected-day" className="scroll-mt-4">
         <h2 id="selected-day" className="mb-2 font-medium">{formatDayKey(selectedDay, { weekday: "long", year: "numeric" })}</h2>
         {byDay[selectedDay]?.length ? (
           <ul className="divide-y divide-line-subtle card">

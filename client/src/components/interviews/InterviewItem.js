@@ -50,7 +50,7 @@ export function InterviewItem({ interview, application, viewerTz, now, onEdit, s
 
   return (
     <li className="flex flex-col gap-3 p-4 sm:flex-row">
-      <div className="w-28 shrink-0 text-sm">
+      <div className="w-32 shrink-0 text-sm">
         <p className="font-semibold">
           {formatTime(start, viewerTz)}–{formatTime(end, viewerTz)}
         </p>
