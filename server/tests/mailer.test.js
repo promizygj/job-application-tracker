@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAddress, sendViaBrevo, textToHtml } from "../src/lib/mailer.js";
+import { maskEmail, parseAddress, sendViaBrevo, textToHtml } from "../src/lib/mailer.js";
 
 describe("parseAddress", () => {
   it.each([
@@ -8,6 +8,14 @@ describe("parseAddress", () => {
     ["<a@b.co>", { email: "a@b.co" }],
     ["  a@b.co ", { email: "a@b.co" }],
   ])("%s", (input, expected) => expect(parseAddress(input)).toEqual(expected));
+});
+
+describe("maskEmail", () => {
+  it.each([
+    ["promizygj+jobtrack-live-1@gmail.com", "pr***@gmail.com"],
+    ["ab@x.io", "ab***@x.io"],
+    ["a@x.io", "a***@x.io"],
+  ])("%s", (input, expected) => expect(maskEmail(input)).toBe(expected));
 });
 
 describe("textToHtml", () => {
@@ -28,7 +36,8 @@ describe("sendViaBrevo", () => {
       call = { url, init };
       return new Response(JSON.stringify({ messageId: "<1@relay>" }), { status: 201 });
     };
-    await sendViaBrevo(email, { apiKey: "xkeysib-test", from: "JobTrack <promizygj@gmail.com>", fetchImpl });
+    const id = await sendViaBrevo(email, { apiKey: "xkeysib-test", from: "JobTrack <promizygj@gmail.com>", fetchImpl });
+    expect(id).toBe("<1@relay>");
 
     expect(call.url).toBe("https://api.brevo.com/v3/smtp/email");
     expect(call.init.method).toBe("POST");

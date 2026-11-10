@@ -14,6 +14,12 @@ import { env } from "../config/env.js";
 
 const SEND_TIMEOUT_MS = 10_000;
 
+/** Which delivery method is active (logged once at startup so it's visible in the host's logs). */
+export const mailMode = env.NODE_ENV === "test" ? "test" : env.BREVO_API_KEY ? "brevo" : env.SMTP_HOST ? "smtp" : "console";
+
+/** "promizygj+x@gmail.com" → "pr***@gmail.com": enough to recognise in logs without exposing addresses. */
+export const maskEmail = (email) => email.replace(/^(.{0,2})[^@]*@/, "$1***@");
+
 /** In tests, emails are collected here instead of sent, so tests can follow the links in them. */
 export const testOutbox = [];
 
@@ -59,6 +65,8 @@ export async function sendViaBrevo({ to, subject, text }, { apiKey = env.BREVO_A
     signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Brevo API ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const { messageId } = await res.json().catch(() => ({}));
+  return messageId;
 }
 
 export async function sendMail({ to, subject, text }) {
@@ -67,11 +75,19 @@ export async function sendMail({ to, subject, text }) {
     return;
   }
   try {
-    if (env.BREVO_API_KEY) return await sendViaBrevo({ to, subject, text });
-    if (smtp) return await smtp.sendMail({ from: env.MAIL_FROM, to, subject, text });
+    if (env.BREVO_API_KEY) {
+      const messageId = await sendViaBrevo({ to, subject, text });
+      console.log(`📧 Sent "${subject}" to ${maskEmail(to)} via Brevo (messageId ${messageId ?? "?"})`);
+      return;
+    }
+    if (smtp) {
+      const info = await smtp.sendMail({ from: env.MAIL_FROM, to, subject, text });
+      console.log(`📧 Sent "${subject}" to ${maskEmail(to)} via SMTP (${info.messageId})`);
+      return;
+    }
     console.log(`\n📧 [dev email] To: ${to}\n   Subject: ${subject}\n   ${text.replace(/\n/g, "\n   ")}\n`);
   } catch (err) {
     // Don't fail the request because the email provider is down: the user can request a resend.
-    console.error(`Failed to send email "${subject}" to ${to}:`, err.message);
+    console.error(`📧 Failed to send "${subject}" to ${maskEmail(to)}:`, err.message);
   }
 }
