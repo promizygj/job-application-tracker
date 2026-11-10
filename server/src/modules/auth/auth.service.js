@@ -53,7 +53,9 @@ async function consumeAuthToken(token, type) {
 
 export async function sendVerificationEmail(user) {
   const token = await issueAuthToken(user.id, "EMAIL_VERIFICATION", 24 * HOUR);
-  await sendMail({
+  // Not awaited: the email provider can take seconds (up to its timeout), and sign-up shouldn't wait
+  // for it. sendMail never rejects (it logs failures), and the user can always resend from the app.
+  void sendMail({
     to: user.email,
     subject: "Verify your JobTrack email",
     text: `Hi ${user.name},\n\nConfirm your email address:\n${env.CLIENT_URL}/verify-email?token=${token}\n\nThis link expires in 24 hours.`,

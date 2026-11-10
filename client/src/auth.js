@@ -7,6 +7,10 @@ class InvalidCredentials extends CredentialsSignin {
 class RateLimited extends CredentialsSignin {
   code = "rate_limited";
 }
+/** The API is unreachable or still waking up (e.g. a sleeping free Render instance). */
+class ApiUnavailable extends CredentialsSignin {
+  code = "unavailable";
+}
 
 // Pages only signed-out users should see.
 const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/reset-password"];
@@ -19,16 +23,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: { email: {}, password: {} },
       // The Express API owns the database, so it checks the password.
       async authorize(credentials) {
-        const res = await fetch(`${process.env.API_URL}/api/v1/auth/credentials`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-internal-secret": process.env.INTERNAL_API_SECRET,
-          },
-          body: JSON.stringify({ email: credentials.email, password: credentials.password }),
-          cache: "no-store",
-        });
+        let res;
+        try {
+          res = await fetch(`${process.env.API_URL}/api/v1/auth/credentials`, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-internal-secret": process.env.INTERNAL_API_SECRET,
+            },
+            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+            cache: "no-store",
+          });
+        } catch {
+          throw new ApiUnavailable();
+        }
         if (res.status === 429) throw new RateLimited();
+        if (res.status >= 500) throw new ApiUnavailable(); // a server problem is not a wrong password
         if (!res.ok) throw new InvalidCredentials();
         const { data } = await res.json();
         return data.user;

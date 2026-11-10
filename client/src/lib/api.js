@@ -17,8 +17,26 @@ api.interceptors.response.use(
   },
 );
 
+export const SERVER_WAKING_MESSAGE = "Our server is starting up. Please wait a few seconds and try again.";
+
+/**
+ * True when the request never got a proper answer from the API: no response at all, or a
+ * gateway error while the (free-tier) server wakes from sleep.
+ */
+export function isServerUnavailable(error) {
+  const status = error?.response?.status;
+  return !error?.response || [502, 503, 504].includes(status);
+}
+
 export function getErrorMessage(error, fallback = "Something went wrong. Please try again.") {
-  return error?.response?.data?.error?.message ?? fallback;
+  const message = error?.response?.data?.error?.message;
+  if (message) return message;
+  return isServerUnavailable(error) ? SERVER_WAKING_MESSAGE : fallback;
+}
+
+/** Fire-and-forget request that wakes a sleeping API while the user is still filling in a form. */
+export function wakeApi() {
+  fetch("/api/v1/health", { cache: "no-store" }).catch(() => {});
 }
 
 /** Maps API validation details to { fieldName: message }, keeping the first message for each field. */

@@ -16,6 +16,26 @@ test("register through the form lands on the dashboard with a verify-email banne
   await expect(page.getByText(/Verify .* to unlock document uploads/)).toBeVisible();
 });
 
+test("empty or malformed login is caught in the browser without calling the server", async ({ page }) => {
+  await page.goto("/login");
+  let signInRequests = 0;
+  page.on("request", (r) => r.url().includes("/api/auth/callback/credentials") && signInRequests++);
+
+  await page.getByRole("button", { name: "Log in" }).click();
+  await expect(page.getByText("Enter your email")).toBeVisible();
+  await expect(page.getByText("Enter your password")).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveAttribute("aria-invalid", "true");
+
+  await page.getByLabel("Email").fill("not-an-email");
+  await page.getByLabel("Password").fill("whatever1");
+  await page.getByRole("button", { name: "Log in" }).click();
+  await expect(page.getByText("Enter a valid email")).toBeVisible();
+  await expect(page.getByText("Enter your password")).toBeHidden();
+  await expect(page.getByText("Invalid email or password.")).toBeHidden();
+  expect(signInRequests).toBe(0);
+});
+
 test("wrong password shows a generic error", async ({ page }) => {
   const user = createUser("wrongpw");
   await page.goto("/login");

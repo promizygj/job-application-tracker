@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Input } from "@/components/ui/Input";
 import { api, getErrorMessage, getFieldErrors } from "@/lib/api";
+import { collectErrors, emailError, focusFirstError, newPasswordError } from "@/lib/validation";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -20,10 +21,19 @@ export function RegisterForm() {
   async function onSubmit(e) {
     e.preventDefault();
     setError(null);
-    setFieldErrors({});
-    setLoading(true);
     const form = new FormData(e.currentTarget);
     const body = { name: form.get("name"), email: form.get("email"), password: form.get("password") };
+    const invalid = collectErrors({
+      name: String(body.name ?? "").trim() ? null : "Enter your name",
+      email: emailError(body.email),
+      password: newPasswordError(body.password),
+    });
+    setFieldErrors(invalid ?? {});
+    if (invalid) {
+      focusFirstError(e.currentTarget, invalid);
+      return;
+    }
+    setLoading(true);
     try {
       await api.post("/auth/register", body);
     } catch (err) {

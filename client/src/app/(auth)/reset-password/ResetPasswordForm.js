@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { api, getErrorMessage, getFieldErrors } from "@/lib/api";
+import { collectErrors, focusFirstError, newPasswordError } from "@/lib/validation";
 
 export function ResetPasswordForm() {
   const router = useRouter();
@@ -27,12 +28,18 @@ export function ResetPasswordForm() {
   async function onSubmit(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    if (form.get("password") !== form.get("confirm")) {
-      setFieldErrors({ confirm: "Passwords don't match" });
+    const invalid = collectErrors({
+      password: newPasswordError(form.get("password")),
+      confirm: !form.get("confirm")
+        ? "Confirm your new password"
+        : form.get("password") !== form.get("confirm") ? "Passwords don't match" : null,
+    });
+    setError(null);
+    setFieldErrors(invalid ?? {});
+    if (invalid) {
+      focusFirstError(e.currentTarget, invalid);
       return;
     }
-    setError(null);
-    setFieldErrors({});
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { token, password: form.get("password") });
