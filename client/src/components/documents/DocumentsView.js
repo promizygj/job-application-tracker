@@ -16,6 +16,13 @@ import { useDeleteDocumentMutation, useGetMeQuery, useListDocumentsQuery, useUpd
 import { useToast } from "@/store/hooks";
 import { UploadDialog } from "./UploadDialog";
 
+/** Empty-state copy for each tab, so the call to action matches what the tab holds. */
+const EMPTY = {
+  "": { title: "No documents yet", cta: "Upload your CV" },
+  CV: { title: "No CVs yet", cta: "Upload your CV" },
+  COVER_LETTER: { title: "No cover letters yet", cta: "Upload your cover letter" },
+  OTHER: { title: "No other documents yet", cta: "Upload a document" },
+};
 const FILTERS = [{ value: "", label: "All" }, ...DOCUMENT_TYPES.map((t) => ({ ...t, label: t.value === "CV" ? "CVs" : t.value === "COVER_LETTER" ? "Cover letters" : "Other" }))];
 
 /** Shared Preview / Download buttons. */
@@ -166,7 +173,7 @@ export function DocumentsView() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-h1 font-semibold text-ink">Documents</h1>
         <button
-          onClick={() => setUpload({})}
+          onClick={() => setUpload({ type: type || undefined })}
           disabled={!verified}
           title={verified ? undefined : "Verify your email to upload"}
           className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-200"
@@ -196,11 +203,11 @@ export function DocumentsView() {
         <ErrorState message="Couldn't load your documents." onRetry={refetch} />
       ) : groups.length === 0 ? (
         <EmptyState
-          title={type ? "No documents of this type yet" : "No documents yet"}
+          title={(EMPTY[type] ?? EMPTY[""]).title}
           action={
             verified && (
-              <button onClick={() => setUpload({})} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-                Upload your CV
+              <button onClick={() => setUpload({ type: type || "CV" })} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                {(EMPTY[type] ?? EMPTY[""]).cta}
               </button>
             )
           }
@@ -234,7 +241,7 @@ export function DocumentsView() {
         </div>
       )}
 
-      <UploadDialog open={Boolean(upload)} onClose={() => setUpload(null)} preset={upload?.preset} />
+      <UploadDialog open={Boolean(upload)} onClose={() => setUpload(null)} preset={upload?.preset} defaultType={upload?.type} />
       <Modal open={Boolean(editing)} onClose={() => setEditing(null)} title={editing ? `Rename ${editing.name} v${editing.version}` : ""}>
         {editing && <EditDialog key={editing.id} doc={editing} onClose={() => setEditing(null)} />}
       </Modal>

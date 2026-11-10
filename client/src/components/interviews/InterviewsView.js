@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState, Spinner } from "@/components/ui/States";
-import { dayKey, formatDayKey } from "@/lib/time";
+import { dayKey, formatDayKey, formatTime } from "@/lib/time";
 import { useGetMeQuery, useListInterviewsQuery } from "@/store/apiSlice";
 import { InterviewDialog } from "./InterviewDialog";
 import { InterviewItem } from "./InterviewItem";
@@ -103,7 +103,7 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
   if (isError) return <ErrorState message="Couldn't load your calendar." onRetry={refetch} />;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
       <section aria-label={`Calendar, ${monthLabel}`} className="card p-3">
         <div className="mb-2 flex items-center justify-between">
           <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="rounded px-2 py-1 hover:bg-subtle">‹</button>
@@ -115,8 +115,18 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
         </div>
         <div className={`grid grid-cols-7 gap-1 ${isLoading ? "opacity-50" : ""}`}>
           {days.map((d) => {
-            const count = byDay[d]?.length ?? 0;
+            const items = byDay[d] ?? [];
+            const count = items.length;
             const inMonth = d.startsWith(month);
+            const isSelected = d === selectedDay;
+            const busy = count > 0;
+            const tone = isSelected
+              ? "bg-brand-600 text-white"
+              : busy
+                ? `bg-brand-50 ring-1 ring-brand-200 ring-inset hover:bg-brand-100 ${inMonth ? "text-brand-800" : "text-brand-800/60"}`
+                : inMonth
+                  ? "hover:bg-subtle"
+                  : "text-slate-400 hover:bg-canvas";
             return (
               <button
                 key={d}
@@ -124,16 +134,39 @@ function CalendarView({ month, setMonth, viewerTz, now, onEdit }) {
                   setSelected(d);
                   if (!inMonth) setMonth(d.slice(0, 7));
                 }}
-                aria-pressed={d === selectedDay}
+                aria-pressed={isSelected}
                 aria-label={`${formatDayKey(d, { weekday: "long", year: "numeric" })}${count ? `, ${count} interview${count > 1 ? "s" : ""}` : ""}`}
-                className={`flex aspect-square flex-col items-center justify-start rounded-lg p-1 text-sm sm:aspect-auto sm:h-16 ${
-                  d === selectedDay ? "bg-brand-600 text-white" : inMonth ? "hover:bg-subtle" : "text-slate-400 hover:bg-canvas"
-                }`}
+                className={`flex aspect-square min-w-0 flex-col items-center justify-start gap-1 overflow-hidden rounded-lg p-1 text-sm sm:aspect-auto sm:h-24 sm:items-stretch sm:p-1.5 ${tone}`}
               >
-                <span className={d === today && d !== selectedDay ? "font-bold text-brand-600" : ""}>{Number(d.slice(8))}</span>
-                {count > 0 && (
-                  <span className={`mt-1 rounded-full px-1.5 text-[10px] font-semibold ${d === selectedDay ? "bg-white text-brand-700" : "bg-violet-100 text-violet-700"}`}>
-                    {count}
+                <span
+                  className={`text-center sm:text-left ${busy ? "font-semibold" : ""} ${
+                    d === today && !isSelected ? "font-bold text-brand-600 underline decoration-2 underline-offset-4" : ""
+                  }`}
+                >
+                  {Number(d.slice(8))}
+                </span>
+                {/* Phones: one dot per interview (max 3) */}
+                {busy && (
+                  <span aria-hidden className="flex gap-0.5 sm:hidden">
+                    {items.slice(0, 3).map((i) => (
+                      <span key={i.id} className={`size-1.5 rounded-full ${isSelected ? "bg-white" : "bg-brand-600"}`} />
+                    ))}
+                  </span>
+                )}
+                {/* Wider screens: what's on, e.g. "10:00 Acme" */}
+                {busy && (
+                  <span aria-hidden className="hidden min-w-0 flex-col gap-0.5 sm:flex">
+                    {items.slice(0, 2).map((i) => (
+                      <span
+                        key={i.id}
+                        className={`truncate rounded px-1 py-px text-left text-[11px] leading-4 font-medium ${
+                          isSelected ? "bg-white/20 text-white" : "bg-white text-brand-800 shadow-sm"
+                        }`}
+                      >
+                        {formatTime(i.startsAt, viewerTz)} {i.application?.company}
+                      </span>
+                    ))}
+                    {count > 2 && <span className={`px-1 text-left text-[11px] leading-4 ${isSelected ? "text-white/80" : "text-brand-700"}`}>+{count - 2} more</span>}
                   </span>
                 )}
               </button>

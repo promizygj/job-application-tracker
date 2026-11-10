@@ -29,6 +29,21 @@ import { formatDateTime, formatSalary } from "@/lib/format";
 import { getApiError, useGetBoardQuery, useGetMeQuery, useMoveApplicationMutation } from "@/store/apiSlice";
 import { useToast } from "@/store/hooks";
 
+/**
+ * PointerSensor for mouse and pen only. On phones a touch also fires pointer events; if this sensor
+ * claimed them it would start on a 6px move, the browser would start scrolling, cancel the pointer
+ * and the drag would die. Touches are left to the long-press TouchSensor instead.
+ */
+class MouseAndPenSensor extends PointerSensor {
+  static activators = [
+    {
+      eventName: "onPointerDown",
+      handler: (event, options) =>
+        event.nativeEvent.pointerType !== "touch" && PointerSensor.activators[0].handler(event, options),
+    },
+  ];
+}
+
 const DAY = 24 * 60 * 60 * 1000;
 const COLUMN_PREFIX = "column:";
 const columnId = (status) => `${COLUMN_PREFIX}${status}`;
@@ -87,7 +102,9 @@ function CardBody({ card, today, timeZone, dragHandleProps, onMove, overlay = fa
   return (
     <div
       {...dragHandleProps}
-      className={`flex flex-col gap-2.5 rounded-[10px] bg-white p-3.5 text-sm shadow-card outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+      // Long-press drags on touch: stop it selecting text or opening the link/context menu instead.
+      onContextMenu={overlay ? undefined : (e) => e.preventDefault()}
+      className={`flex touch-manipulation flex-col gap-2.5 rounded-[10px] bg-white p-3.5 text-sm shadow-card outline-none select-none [-webkit-touch-callout:none] focus-visible:ring-2 focus-visible:ring-brand-500 ${
         card.status === "OFFER" ? "border-[1.5px] border-emerald-700" : "border border-line"
       } ${closed && !overlay ? "opacity-65" : ""} ${overlay ? `cursor-grabbing shadow-pop ${tilt ? "rotate-2" : ""}` : "cursor-grab"}`}
     >
@@ -166,7 +183,7 @@ function Column({ status, cards, collapsed, onToggle, today, timeZone, onMove })
 
   if (collapsed) {
     return (
-      <section ref={setNodeRef} aria-label={`${s.label} column, ${cards.length} applications, collapsed`} className={`w-10 shrink-0 self-start rounded-xl bg-subtle ${ring}`}>
+      <section ref={setNodeRef} aria-label={`${s.label} column, ${cards.length} applications, collapsed`} className={`w-10 shrink-0 snap-start self-start rounded-xl bg-subtle ${ring}`}>
         <button
           onClick={onToggle}
           aria-expanded={false}
@@ -184,7 +201,7 @@ function Column({ status, cards, collapsed, onToggle, today, timeZone, onMove })
   return (
     <section
       aria-label={`${s.label} column, ${cards.length} applications`}
-      className={`flex min-w-[160px] flex-1 basis-0 flex-col gap-2.5 rounded-xl bg-subtle px-2 py-3 ${ring}`}
+      className={`flex w-[85vw] max-w-80 shrink-0 snap-start flex-col gap-2.5 rounded-xl bg-subtle px-2 py-3 md:w-auto md:max-w-none md:min-w-[160px] md:flex-1 md:shrink md:basis-0 ${ring}`}
     >
       <header className="flex items-center gap-1.5 px-1 pb-1">
         <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: s.dot }} />
@@ -257,8 +274,8 @@ export function BoardView() {
   const [drag, setDrag] = useState(null); // { activeId, from: status, fromIndex, columns: { STATUS: [ids] } }
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), // small move needed, so clicks still work
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }), // long-press on touch, so scrolling works
+    useSensor(MouseAndPenSensor, { activationConstraint: { distance: 6 } }), // small move needed, so clicks still work
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 10 } }), // long-press on touch, so scrolling works
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -290,6 +307,8 @@ export function BoardView() {
   function onDragStart({ active, activatorEvent }) {
     const from = findColumn(active.id, serverIds);
     setDrag({ activeId: active.id, from, fromIndex: serverIds[from].indexOf(active.id), columns: serverIds, keyboard: activatorEvent?.type === "keydown" });
+    // A short buzz tells touch users the long-press worked and the card is now moving.
+    if (activatorEvent?.type === "touchstart") navigator.vibrate?.(15);
   }
 
   // Moving over another column: move the card into it right away, so the drop slot opens up there.
@@ -385,8 +404,11 @@ export function BoardView() {
           onDragEnd={onDragEnd}
           onDragCancel={() => setDrag(null)}
           accessibility={{ announcements }}
+          // Gentler edge scrolling: on a phone the edge zone is most of a column, and the default
+          // speed flies past several stages before the finger can react.
+          autoScroll={{ threshold: { x: 0.12, y: 0.12 }, acceleration: 4 }}
         >
-          <div className="-mx-4 flex items-start gap-3 overflow-x-auto px-4 pb-4 sm:-mx-8 sm:px-8">
+          <div className={`-mx-4 flex ${drag ? "" : "snap-x snap-mandatory"} scroll-px-4 items-start gap-3 overflow-x-auto overscroll-x-contain px-4 pb-4 sm:-mx-8 sm:scroll-px-8 sm:px-8 md:snap-none`} data-board-scroller>
             {STATUSES.map(({ value: status }) => (
               <Column
                 key={status}

@@ -68,20 +68,20 @@ function Dropzone({ file, onFile, error }) {
  * Upload a document. `preset` = { type, name } to add a new version of an existing document.
  * `onUploaded(document)` runs after a successful upload (e.g. to attach it to an application).
  */
-export function UploadDialog({ open, onClose, preset, onUploaded }) {
+export function UploadDialog({ open, onClose, preset, defaultType, onUploaded }) {
   return (
     <Modal open={open} onClose={onClose} title={preset ? `New version of “${preset.name}”` : "Upload document"} size="max-w-lg">
-      <UploadForm preset={preset} onClose={onClose} onUploaded={onUploaded} />
+      <UploadForm preset={preset} defaultType={defaultType} onClose={onClose} onUploaded={onUploaded} />
     </Modal>
   );
 }
 
-function UploadForm({ preset, onClose, onUploaded }) {
+function UploadForm({ preset, defaultType, onClose, onUploaded }) {
   const dispatch = useDispatch();
   const toast = useToast();
   const { data: documents = [] } = useListDocumentsQuery();
   const [file, setFile] = useState(null);
-  const [type, setType] = useState(preset?.type ?? "CV");
+  const [type, setType] = useState(preset?.type ?? defaultType ?? "CV");
   const [name, setName] = useState(preset?.name ?? "");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState({});
